@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>NutriVision — Ingredient-aware nutrition estimation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Single-image food nutrition estimation with ingredient-aware hierarchical frequency fusion. 13.52 % PMAE on Nutrition5k.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-pmae="13.52" data-theme="academic">
+
+<!-- ╔══ Configure live-demo backend here.  Leave empty to disable the demo.
+     ║   Example: <body … data-api-url="https://orange-pancake-22.trycloudflare.com">
+     ╚══ When set, the demo POSTs to <data-api-url>/api/predict and /api/suggest. -->
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#" class="brand">
+      <span class="logo">◆</span><span><b>NutriVision</b></span>
+    </a>
+    <div class="nav-links">
+      <a href="#overview">Overview</a>
+      <a href="#method">Method</a>
+      <a href="#results">Results</a>
+      <a href="#gallery">Gallery</a>
+      <a href="#demo" class="cta">Try it →</a>
+      <button id="theme-btn" class="theme-btn" title="Cycle theme">◐</button>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="container">
+    <div class="badges">
+      <span class="badge accent">Research preview</span>
+      <span class="badge">Nutrition5k</span>
+      <span class="badge">OmniFood8K</span>
+    </div>
+    <h1>NutriVision</h1>
+    <p class="tag">Ingredient-aware hierarchical frequency fusion for single-image food nutrition estimation.</p>
+    <p class="sub">From a single RGB photo of a plated meal — plus an optional ingredient list — we estimate calories, mass, fat, carbs, and protein. State-of-the-art on Nutrition5k.</p>
+    <div class="cta-row">
+      <a href="#demo" class="btn primary">Try the live demo</a>
+      <a href="#results" class="btn ghost">See results</a>
+    </div>
+    <div class="hero-stats">
+      <div><b>13.52%</b><span>Nutrition5k mean PMAE</span></div>
+      <div><b>10.89%</b><span>OmniFood8K mean PMAE</span></div>
+      <div><b>5</b><span>nutrients per image</span></div>
+      <div><b>≈3 s</b><span>per prediction on A6000</span></div>
+    </div>
+  </div>
+</header>
+
+<section id="overview" class="section">
+  <div class="container narrow">
+    <div class="kicker">Overview</div>
+    <h2>Why nutrition estimation from a single image is hard</h2>
+    <p>
+      Photo-based nutrition apps must turn one RGB image into five physically meaningful numbers
+      (calories, mass, fat, carbohydrate, protein). Prior multimodal systems lean on real depth
+      sensors and ingredient annotations that aren't available at deployment time. NutriVision
+      combines a dual ConvNeXt-Base backbone, monocular depth from DepthAnything&nbsp;V3, and CLIP-encoded
+      ingredient text through a novel <em>Ingredient-Conditioned Frequency-Aligned Fusion Module</em>.
+    </p>
+    <p>
+      The result: <b>13.52 % mean PMAE on Nutrition5k</b> — better than OmniFood8K (16.5%), IGSMNet
+      (14.7%), and NuNet (15.65 % with real depth) — using only estimated depth and an optional
+      ingredient list.
+    </p>
+  </div>
+</section>
+
+<section id="method" class="section alt">
+  <div class="container">
+    <div class="kicker">Method</div>
+    <h2>Architecture</h2>
+    <p class="muted">RGB and DA3 depth pass through a dual ConvNeXt-Base + ISM stack; CLIP-encoded ingredient text conditions both the frequency-domain fusion (IC-FAFM) and the prediction head (IA-MPH).</p>
+    <img src="img/architecture.png" alt="NutriVision architecture diagram" class="arch">
+
+    <div class="cards">
+      <div class="card-mini">
+        <div class="num">1</div>
+        <h3>SSRA</h3>
+        <p>Refines DA3 monocular depth via global scale-shift + a local CNN residual.</p>
+      </div>
+      <div class="card-mini">
+        <div class="num">2</div>
+        <h3>Dual ConvNeXt-B + ISM</h3>
+        <p>Two ImageNet-22k pretrained backbones with window-attention refinement at 4 scales.</p>
+      </div>
+      <div class="card-mini">
+        <div class="num">3</div>
+        <h3>IC-FAFM</h3>
+        <p>FFT split + ingredient cross-attention fuses RGB and depth at every scale.</p>
+      </div>
+      <div class="card-mini">
+        <div class="num">4</div>
+        <h3>IA-MPH</h3>
+        <p>Ingredient-gated channel selection + cross-attention head predicts 5 nutrients.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="results" class="section">
+  <div class="container">
+    <div class="kicker">Results</div>
+    <h2>Performance on two datasets</h2>
+
+    <h3 class="tbl-title">Nutrition5k <small>(test split, 5:1 dish-level)</small></h3>
+    <table class="results">
+      <thead>
+        <tr><th>Method</th><th>Venue</th><th>Cal</th><th>Mass</th><th>Fat</th><th>Carb</th><th>Prot</th><th>Mean ↓</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Google-Nutrition-rgb</td><td>CVPR'21</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>29.1%</td></tr>
+        <tr><td>Swin-Nutrition</td><td>Foods'22</td><td>15.5</td><td>12.9</td><td>22.1</td><td>18.0</td><td>17.5</td><td>17.2%</td></tr>
+        <tr><td>DPF-Nutrition</td><td>Foods'23</td><td>16.1</td><td>10.9</td><td>21.2</td><td>19.3</td><td>19.0</td><td>17.3%</td></tr>
+        <tr><td>OmniFood8K</td><td>CVPR'25</td><td>14.1</td><td>10.2</td><td>21.0</td><td>18.9</td><td>18.4</td><td>16.5%</td></tr>
+        <tr><td>NuNet (real depth)</td><td>TMM'25</td><td>13.3</td><td>10.7</td><td>19.4</td><td>17.8</td><td>17.1</td><td>15.65%</td></tr>
+        <tr><td>IGSMNet</td><td>TAFe'24</td><td>13.8</td><td>11.7</td><td>17.8</td><td>15.4</td><td>14.7</td><td>14.7%</td></tr>
+        <tr class="ours"><td><b>NutriVision</b> <span class="muted small">(synth → N5k finetune)</span></td><td>—</td><td>13.8</td><td>11.9</td><td>17.8</td><td>15.6</td><td>15.0</td><td>14.80%</td></tr>
+        <tr class="ours"><td><b>NutriVision (ours, from-scratch)</b></td><td>—</td><td><b>12.65</b></td><td><b>10.37</b></td><td><b>16.45</b></td><td><b>14.76</b></td><td><b>13.35</b></td><td><b>13.52%</b></td></tr>
+      </tbody>
+    </table>
+
+    <h3 class="tbl-title">OmniFood8K <small>(synth → 8K finetune)</small></h3>
+    <table class="results">
+      <thead>
+        <tr><th>Method</th><th>Setting</th><th>Cal</th><th>Mass</th><th>Fat</th><th>Carb</th><th>Prot</th><th>Mean ↓</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>OmniFood8K (baseline)</td><td>RGB only</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>8.6%</td></tr>
+        <tr><td>OmniFood8K (full)</td><td>RGB + depth</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>7.8%</td></tr>
+        <tr class="ours"><td><b>NutriVision</b> <span class="muted small">(synth → 8K finetune)</span></td><td>RGB + ingr + DA3 depth</td><td><b>9.4</b></td><td><b>7.8</b></td><td><b>10.6</b></td><td><b>13.1</b></td><td><b>13.6</b></td><td><b>10.89%</b></td></tr>
+      </tbody>
+    </table>
+    <p class="muted small"><b>Cross-finetune note:</b> our synthetic → Nutrition5k finetune (75 epochs) already reaches <b>14.80% mean PMAE</b> — <b>1.7%</b> better than the OmniFood8K paper's 16.5% on the same benchmark, and our from-scratch run goes further to 13.52%.</p>
+
+    <div class="cards">
+      <div class="callout">
+        <h4>Nutrition5k vs OmniFood8K</h4>
+        <p><b>−2.98%</b> absolute &nbsp;<span class="muted">(18.1% relative)</span></p>
+      </div>
+      <div class="callout">
+        <h4>Nutrition5k vs IGSMNet</h4>
+        <p><b>−1.18%</b> absolute &nbsp;<span class="muted">(8.0% relative)</span></p>
+      </div>
+      <div class="callout">
+        <h4>Nutrition5k vs NuNet (real depth)</h4>
+        <p><b>−2.13%</b> absolute &nbsp;<span class="muted">— with estimated depth only</span></p>
+      </div>
+      <div class="callout">
+        <h4>OmniFood8K mean PMAE</h4>
+        <p><b>10.89%</b> &nbsp;<span class="muted">— synth → 8K finetune</span></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="gallery" class="section alt">
+  <div class="container">
+    <div class="kicker">Gallery</div>
+    <h2>What the model sees</h2>
+    <p class="muted">For each food photo, we run DepthAnything V3 for monocular depth and use CLIP-encoded ingredient text to guide the fusion. Below are three samples from Nutrition5k.</p>
+
+    <div class="gallery">
+      <article class="dish">
+        <img src="img/sample_chicken_rice.jpg" alt="chicken bowl">
+        <div class="dish-body">
+          <h3>Chicken &amp; brown rice bowl</h3>
+          <p class="muted">arugula, basil, broccoli, brown rice, chicken thigh, garlic, lemon</p>
+          <ul class="nutri">
+            <li><span>Calories</span><b>686 kcal</b></li>
+            <li><span>Mass</span><b>420 g</b></li>
+            <li><span>Fat</span><b>27 g</b></li>
+            <li><span>Carbs</span><b>58 g</b></li>
+            <li><span>Protein</span><b>52 g</b></li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="dish">
+        <img src="img/sample_eggplant.jpg" alt="eggplant salad">
+        <div class="dish-body">
+          <h3>Eggplant medley</h3>
+          <p class="muted">celery root, chard, cherry tomatoes, chive, eggplant</p>
+          <ul class="nutri">
+            <li><span>Calories</span><b>385 kcal</b></li>
+            <li><span>Mass</span><b>360 g</b></li>
+            <li><span>Fat</span><b>18 g</b></li>
+            <li><span>Carbs</span><b>44 g</b></li>
+            <li><span>Protein</span><b>14 g</b></li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="dish">
+        <img src="img/sample_fried_rice.jpg" alt="fried rice bowl">
+        <div class="dish-body">
+          <h3>Fried rice bowl</h3>
+          <p class="muted">bell peppers, blueberries, chicken, fried rice, garlic</p>
+          <ul class="nutri">
+            <li><span>Calories</span><b>489 kcal</b></li>
+            <li><span>Mass</span><b>340 g</b></li>
+            <li><span>Fat</span><b>15 g</b></li>
+            <li><span>Carbs</span><b>62 g</b></li>
+            <li><span>Protein</span><b>28 g</b></li>
+          </ul>
+        </div>
+      </article>
+    </div>
+
+    <h3 class="tbl-title" style="margin-top:40px">RGB / DA3 depth / SAM3 mask</h3>
+    <img src="img/triptych.png" alt="triptych RGB-depth-mask" class="arch" style="max-width:780px">
+  </div>
+</section>
+
+<section id="demo" class="section">
+  <div class="container narrow">
+    <div class="kicker">Live demo</div>
+    <h2>Try it on your own photo</h2>
+    <p class="muted" id="demo-blurb">Upload a plated-meal photo. Auto-suggest will hint at the ingredients via BLIP&nbsp;+&nbsp;CLIP; you can edit before predicting. Expected error band: ±13.52% PMAE.</p>
+
+    <form id="predict-form" class="card" enctype="multipart/form-data">
+      <label class="dropzone">
+        <input type="file" name="image" id="image-input" accept="image/*">
+        <span id="dropzone-label">Click or drop a food image</span>
+        <img id="preview" alt="">
+      </label>
+
+      <div class="row">
+        <label for="ingredients">Ingredients (comma-separated)</label>
+        <button type="button" id="suggest-btn" class="ghost">Auto-suggest</button>
+      </div>
+      <textarea id="ingredients" name="ingredients" rows="2"
+                placeholder="e.g. chicken, rice, broccoli, soy sauce"></textarea>
+      <p id="caption" class="muted"></p>
+
+      <button type="submit" id="predict-btn" class="primary">Predict nutrition</button>
+    </form>
+
+    <section class="card hidden" id="results-card">
+      <h2>Estimated nutrition</h2>
+      <table id="results-table" class="results">
+        <thead><tr><th>Nutrient</th><th>Estimate</th><th>± PMAE band</th><th>% DV</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <p class="muted" id="meta"></p>
+    </section>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="brand">
+          <span class="logo">◆</span><b>NutriVision</b>
+        </div>
+        <p class="muted small" style="margin-top:8px">
+          Single-image food nutrition estimation with ingredient-aware
+          hierarchical frequency fusion. Built on PyTorch + Flask + MongoDB.
+        </p>
+      </div>
+      <div>
+        <h4>Resources</h4>
+        <ul>
+          <li><a href="#method">Architecture</a></li>
+          <li><a href="#results">Results table</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Datasets</h4>
+        <ul>
+          <li>Nutrition5k (Google, CVPR'21)</li>
+          <li>OmniFood8K (CVPR'25)</li>
+        </ul>
+      </div>
+    </div>
+    <hr>
+    <p class="muted small">© NutriVision Research Project. Powered by Om-IGSMNet (ConvNeXt-B + DA3 + CLIP).</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
