@@ -262,34 +262,118 @@ hr { border: 0; border-top: 1px solid var(--border); margin: 24px 0; }
 .nutri li:first-child { border-top: 0; }
 .nutri b { color: var(--primary-2); }
 
-/* GT vs prediction table inside each dish card */
+/* ─── Fancy GT vs Prediction table inside each dish card ─── */
 .dish-pred {
   width: 100%;
-  border-collapse: collapse;
-  font-size: 12.5px;
-  margin: 4px 0 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 12px;
+  margin: 6px 0 0;
   table-layout: fixed;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg-alt);
 }
-.dish-pred th,
-.dish-pred td {
-  padding: 6px 7px;
+.dish-pred col.col-nutri { width: 26%; }
+.dish-pred col.col-gt    { width: 22%; }
+.dish-pred col.col-pred  { width: 28%; }
+.dish-pred col.col-diff  { width: 24%; }
+
+.dish-pred thead th {
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: #fff;
+  background: linear-gradient(90deg, var(--primary) 0%, var(--primary-2) 100%);
+  padding: 8px 8px;
+  border-bottom: 1px solid var(--border);
+  text-align: right;
+}
+.dish-pred thead th:first-child { text-align: left; }
+.dish-pred thead th:nth-child(3) { background: linear-gradient(90deg, var(--accent-2) 0%, var(--accent) 100%); color: #1f1300; }
+
+.dish-pred tbody td {
+  padding: 7px 8px;
   border-bottom: 1px solid var(--border);
   text-align: right;
   white-space: nowrap;
+  transition: background-color .15s ease;
 }
-.dish-pred th:first-child,
-.dish-pred td:first-child { text-align: left; }
-.dish-pred th {
+.dish-pred tbody td:first-child {
+  text-align: left;
   font-weight: 600;
-  font-size: 11px;
-  letter-spacing: .03em;
-  text-transform: uppercase;
-  color: var(--fg-muted);
-  background: color-mix(in srgb, var(--primary) 5%, transparent);
+  color: var(--fg);
+}
+.dish-pred tbody td:nth-child(2) { color: var(--fg-muted); }
+.dish-pred tbody td:nth-child(3) {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.dish-pred tbody td:nth-child(3) b {
+  color: var(--accent-2);
+  font-weight: 700;
+  font-size: 12.5px;
 }
 .dish-pred tbody tr:last-child td { border-bottom: 0; }
-.dish-pred td:nth-child(3) b { color: var(--accent-2); font-weight: 700; }
-.dish-pred td:nth-child(2) { color: var(--fg-muted); }
+.dish-pred tbody tr:hover td { background: color-mix(in srgb, var(--primary) 4%, transparent); }
+.dish-pred tbody tr:hover td:nth-child(3) { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+
+/* Δ column — color-coded by accuracy */
+.dish-pred td.diff {
+  font-weight: 700;
+  font-size: 11.5px;
+  text-align: right;
+}
+.dish-pred td.diff .arrow {
+  display: inline-block;
+  font-size: 8.5px;
+  margin-right: 3px;
+  position: relative;
+  top: -1px;
+}
+.dish-pred td.err-good {
+  color: #1d7a4f;
+  background: color-mix(in srgb, #1d7a4f 9%, transparent);
+}
+.dish-pred td.err-mid {
+  color: #8a5a00;
+  background: color-mix(in srgb, #d99831 12%, transparent);
+}
+.dish-pred td.err-high {
+  color: #8a2530;
+  background: color-mix(in srgb, #c0392b 11%, transparent);
+}
+
+/* Footer with overall mean PMAE for the dish */
+.dish-foot {
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11.5px;
+}
+.dish-foot .mean-pmae-label {
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  font-size: 10px;
+}
+.dish-foot .mean-pmae-val {
+  font-weight: 800;
+  color: var(--primary-2);
+  font-size: 14px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* Dark-mode overrides — slightly lighter chip backgrounds */
+body[data-theme="dark"] .dish-pred td.err-good { background: color-mix(in srgb, #2dd383 14%, transparent); color: #66e2a4; }
+body[data-theme="dark"] .dish-pred td.err-mid  { background: color-mix(in srgb, #f5a623 16%, transparent); color: #ffce6e; }
+body[data-theme="dark"] .dish-pred td.err-high { background: color-mix(in srgb, #ff5f6d 16%, transparent); color: #ff9aa3; }
 
 /* ───────────────────────── carousel ───────────────────────── */
 .carousel {
