@@ -191,3 +191,41 @@ function initCarousel(root) {
 }
 
 document.querySelectorAll("[data-carousel]").forEach(initCarousel);
+
+// ────────────────── paper-overview auto-slider ──────────────────
+function initPaperSlider(root) {
+  const slides = Array.from(root.querySelectorAll(".po-slide"));
+  const dots   = Array.from(root.querySelectorAll("[data-paper-dots] button"));
+  const interval = parseInt(root.dataset.interval || "7000", 10);
+  if (slides.length < 2) return;
+
+  let i = 0, timer = null, paused = false;
+
+  function show(next) {
+    if (next === i) return;
+    slides[i].classList.add("is-leaving");
+    slides[i].classList.remove("is-active");
+    dots[i]?.classList.remove("is-active");
+    slides[next].classList.remove("is-leaving");
+    slides[next].classList.add("is-active");
+    dots[next]?.classList.add("is-active");
+    i = next;
+  }
+
+  function start() {
+    stop();
+    timer = setInterval(() => { if (!paused) show((i + 1) % slides.length); }, interval);
+  }
+  function stop() { if (timer) { clearInterval(timer); timer = null; } }
+
+  dots.forEach((d, idx) => d.addEventListener("click", () => {
+    show(idx); start();   // reset cadence on manual change
+  }));
+  root.addEventListener("mouseenter", () => { paused = true;  });
+  root.addEventListener("mouseleave", () => { paused = false; });
+  root.addEventListener("focusin",    () => { paused = true;  });
+  root.addEventListener("focusout",   () => { paused = false; });
+
+  start();
+}
+document.querySelectorAll("[data-paper-slider]").forEach(initPaperSlider);

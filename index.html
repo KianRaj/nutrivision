@@ -57,66 +57,59 @@
 <section id="overview" class="section">
   <div class="container narrow">
 
-    <article class="paper-overview">
-      <div class="paper-meta">
-        <span><b>NutriVision</b></span>
-        <span>Research preview · 2026</span>
-        <span>Two datasets · Single RGB input</span>
+    <article class="paper-overview compact" data-paper-slider data-interval="7000">
+      <header class="po-head">
+        <span class="po-tag">NutriVision · Research preview</span>
+        <h2>Ingredient-aware hierarchical frequency fusion for single-image food nutrition estimation</h2>
+      </header>
+
+      <div class="po-stage">
+
+        <section class="po-slide is-active" data-slide="0">
+          <h3>Abstract</h3>
+          <p>
+            We estimate <b>calories, mass, fat, carbs, protein</b> from a single RGB plate photo.
+            Prior systems need real depth sensors, multi-view rigs, or hand-curated ingredients.
+            <b>NutriVision</b> uses a dual ConvNeXt-Base backbone, an ingredient-conditioned
+            frequency-fusion module (<b>IC-FAFM</b>), and an ingredient-aware multi-prediction
+            head (<b>IA-MPH</b>) over RGB&nbsp;+&nbsp;DA3 depth&nbsp;+&nbsp;CLIP text.
+          </p>
+          <p class="po-key">
+            <span class="key-num">13.48 %</span> PMAE on Nutrition5k ·
+            <span class="key-num">10.89 %</span> on OmniFood8K — beats every depth-using baseline.
+          </p>
+        </section>
+
+        <section class="po-slide" data-slide="1">
+          <h3>Why this is hard</h3>
+          <p>Two unknowns from one flat photo:</p>
+          <ul class="po-bullets">
+            <li><b>What</b> is on the plate (ingredient identity).</li>
+            <li><b>How much</b> of it (3-D volume × density).</li>
+          </ul>
+          <p class="po-key">
+            We re-introduce geometry via <em>estimated</em> depth and semantics via
+            <em>ingredient text</em>, then fuse them in the <em>frequency domain</em>.
+          </p>
+        </section>
+
+        <section class="po-slide" data-slide="2">
+          <h3>Contributions</h3>
+          <ol class="contributions tight">
+            <li><b>IC-FAFM</b> — FFT fusion: depth → low band, RGB → high band, CLIP-gated mix.</li>
+            <li><b>IA-MPH</b> — ingredient-gated 1×1 cross-attention head, jointly emits 5 nutrients.</li>
+            <li><b>Two-dataset SOTA</b> — <span class="key-num">13.48 %</span> N5k · <span class="key-num">10.89 %</span> Omni.</li>
+            <li><b>Honest SSRA ablation</b> — Δ ≤ 0.1 % PMAE; the v1 → v2 depth-loader fix is the real win.</li>
+          </ol>
+        </section>
+
       </div>
 
-      <h2>Ingredient-aware hierarchical frequency fusion for single-image food nutrition estimation</h2>
-      <p class="paper-sub">— a multimodal study on Nutrition5k and OmniFood8K —</p>
-
-      <h3>Abstract</h3>
-      <div class="abstract">
-        <p>
-          Photo-based dietary assessment requires turning a <em>single</em> RGB image of a plated meal
-          into five physically meaningful numbers — calories, mass, fat, carbohydrate, and protein.
-          Prior systems lean on real depth sensors, multi-view rigs, or manually-curated ingredient
-          annotations that are unavailable at deployment time. We propose <b>NutriVision</b>, a
-          single-image nutrition estimator that combines a dual ConvNeXt-Base backbone, an
-          ingredient-conditioned frequency-domain fusion module (<b>IC-FAFM</b>), and an
-          ingredient-aware multi-prediction head (<b>IA-MPH</b>). Depth is estimated from RGB by
-          DepthAnything&nbsp;V3; ingredient text is encoded by a frozen CLIP ViT-B/32; the food region
-          is isolated by a SAM3 mask. Across two challenging benchmarks our model reaches
-          <span class="key-num">13.48 %</span> mean PMAE on Nutrition5k and
-          <span class="key-num">10.89 %</span> on OmniFood8K — improving over the best published
-          depth-using baselines on both datasets, while using only RGB and an optional ingredient list at
-          inference.
-        </p>
+      <div class="po-dots" data-paper-dots>
+        <button type="button" class="is-active" aria-label="Abstract"></button>
+        <button type="button" aria-label="Why this is hard"></button>
+        <button type="button" aria-label="Contributions"></button>
       </div>
-
-      <h3>Why this is hard</h3>
-      <div class="abstract">
-        <p>
-          Two pieces of information are needed: <b>what is on the plate</b> (semantic identification of
-          each ingredient) and <b>how much of it</b> (a 3-D volume, scaled by density to a mass).
-          From a single 2-D photo, neither is directly observable. Existing approaches either rely on
-          fiducial markers or known-depth rigs (limiting deployment), or treat the problem as a flat
-          regression from RGB pixels (losing volumetric grounding). NutriVision threads the needle by
-          re-introducing geometry through <em>estimated</em> depth and re-introducing semantics
-          through <em>ingredient text</em>, then fusing them in a way that respects the structure of
-          each signal.
-        </p>
-      </div>
-
-      <h3>Contributions</h3>
-      <ol class="contributions">
-        <li><b>IC-FAFM (Ingredient-Conditioned Frequency-Aligned Fusion Module)</b> — a 2-D FFT
-          fusion stage that lets depth dominate the <em>low-frequency</em> band (shape, volume) and
-          RGB dominate the <em>high-frequency</em> band (texture, fine detail), with the mix
-          conditioned by a CLIP-encoded ingredient string.</li>
-        <li><b>IA-MPH (Ingredient-Aware Multi-Prediction Head)</b> — an ingredient-gated channel
-          selection block followed by 1×1 cross-attention, jointly emitting all five nutrient
-          predictions from a single shared trunk.</li>
-        <li><b>Two-dataset validation</b> — reaching <span class="key-num">13.48 %</span> mean PMAE on
-          Nutrition5k (Google CVPR'21) and <span class="key-num">10.89 %</span> on OmniFood8K
-          (CVPR'26), both with a single RGB input and DA3-estimated depth.</li>
-        <li><b>Honest ablations on SSRA</b> — the Scale-Shift Residual Adapter, retained for
-          theoretical consistency with prior multi-modal nutrition systems, contributes at the noise
-          floor (Δ ≤ 0.1 % mean PMAE) on Nutrition5k's fixed-rig cameras; the depth-loader fix (v1
-          uint8 → v2 raw float) accounts for most of the recovered scale signal.</li>
-      </ol>
     </article>
 
   </div>
@@ -709,10 +702,9 @@
           <div class="plc-art">
             <img src="img/pl_rgb.jpg" alt="Input RGB photo">
           </div>
-          <h4>Input RGB photo</h4>
-          <p>A single 384 × 384 plated-meal image. No multi-view rig, no
-            depth sensor — just one phone-quality picture.</p>
-          <div class="plc-tensor">tensor → <b>3 × 384 × 384</b></div>
+          <h4>Input RGB</h4>
+          <p>One 384 × 384 photo. No depth sensor, no rig.</p>
+          <div class="plc-tensor"><b>3 × 384 × 384</b></div>
         </article>
 
         <article class="plc-card plc-arrow-card">
@@ -720,11 +712,9 @@
           <div class="plc-art">
             <img src="img/pl_depth.jpg" alt="DepthAnything V3 monocular depth map">
           </div>
-          <h4>+ Monocular depth (DA3)</h4>
-          <p>DepthAnything&nbsp;V3 turns the photo into a relative depth map.
-            Cold colours = far, warm = near. This is the only place 3-D shape
-            information enters the network.</p>
-          <div class="plc-tensor">tensor → <b>1 × 384 × 384</b> (raw float)</div>
+          <h4>+ Depth (DA3)</h4>
+          <p>DepthAnything&nbsp;V3 — relative depth from RGB. Warm = near, cold = far.</p>
+          <div class="plc-tensor"><b>1 × 384 × 384</b> · raw float</div>
         </article>
 
         <article class="plc-card plc-arrow-card">
@@ -733,73 +723,48 @@
             <img src="img/pl_mask.jpg" alt="SAM3 food-vs-background mask">
           </div>
           <h4>+ Food mask (SAM3)</h4>
-          <p>SAM3 produces a binary food-vs-background mask, so neither
-            backbone wastes capacity learning about tablecloth, shadow, or
-            cutlery — only the food survives.</p>
-          <div class="plc-tensor">tensor → <b>1 × 384 × 384</b> ∈ {0, 1}</div>
+          <p>Drops tablecloth, shadow, cutlery. Only food survives.</p>
+          <div class="plc-tensor"><b>1 × 384 × 384</b> ∈ {0, 1}</div>
         </article>
 
         <article class="plc-card plc-arrow-card">
           <div class="plc-step">Step 4</div>
-          <div class="plc-art plc-concept">
-            <div class="plc-eq">D̃ = α · D<sub>DA3</sub> + β + CNN<sub>res</sub>(D<sub>DA3</sub>)</div>
-            <div class="plc-cap">scale + shift + small residual</div>
+          <div class="plc-art">
+            <img src="img/pl_ssra.jpg" alt="SSRA rescaling — DA3 raw depth vs scale-shifted output">
           </div>
           <h4>SSRA rescaling</h4>
-          <p>DA3 only knows depth <em>up to a scale</em>. The Scale-Shift
-            Residual Adapter learns a per-image affine plus a small CNN
-            correction — nudging it toward the metric depth a calibrated
-            sensor would give.</p>
-          <div class="plc-tensor">depth becomes <b>scale-aware</b></div>
+          <p>Learns a per-image affine + small CNN residual to give depth a metric feel.</p>
+          <div class="plc-tensor">depth → <b>scale-aware</b></div>
         </article>
 
         <article class="plc-card plc-arrow-card">
           <div class="plc-step">Step 5</div>
-          <div class="plc-art plc-concept">
-            <div class="plc-pyramid plc-pyramid-rgb">
-              <span>96²</span><span>48²</span><span>24²</span><span>12²</span>
-            </div>
-            <div class="plc-cap">RGB branch — ConvNeXt-B + ISM</div>
+          <div class="plc-art">
+            <img src="img/pl_feat_rgb.jpg" alt="RGB branch activation overlay — texture, edges, colour">
           </div>
-          <h4>RGB features (appearance)</h4>
-          <p>ConvNeXt-B + ISM builds a 4-scale RGB pyramid. This branch
-            catches <b>colour, sauce gloss, char, grain texture, leaf veins</b>
-            — the cues that tell calories <em>per gram</em>.</p>
-          <div class="plc-tensor">F<sub>rgb</sub> → <b>4 scales</b> · 128 → 1024 ch</div>
+          <h4>RGB features</h4>
+          <p>ConvNeXt-B + ISM lights up on <b>texture, gloss, char, leaf veins</b> — calorie cues.</p>
+          <div class="plc-tensor">F<sub>rgb</sub> · <b>4 scales</b></div>
         </article>
 
         <article class="plc-card plc-arrow-card">
           <div class="plc-step">Step 6</div>
-          <div class="plc-art plc-concept">
-            <div class="plc-pyramid plc-pyramid-dep">
-              <span>96²</span><span>48²</span><span>24²</span><span>12²</span>
-            </div>
-            <div class="plc-cap">Depth branch — ConvNeXt-B + ISM</div>
+          <div class="plc-art">
+            <img src="img/pl_feat_dep.jpg" alt="Depth branch activation overlay — volume, boundaries">
           </div>
-          <h4>Depth features (volume)</h4>
-          <p>A second, parallel ConvNeXt-B runs on the rescaled depth and
-            builds its own 4-scale pyramid. This branch catches <b>thickness,
-            mound height, occlusion order</b> — the cues that tell <em>grams</em>.</p>
-          <div class="plc-tensor">F<sub>dep</sub> → <b>4 scales</b> · 128 → 1024 ch</div>
+          <h4>Depth features</h4>
+          <p>Parallel ConvNeXt-B lights up on <b>mound height, boundaries, occlusion</b> — gram cues.</p>
+          <div class="plc-tensor">F<sub>dep</sub> · <b>4 scales</b></div>
         </article>
 
         <article class="plc-card plc-arrow-card">
           <div class="plc-step">Step 7</div>
-          <div class="plc-art plc-concept">
-            <div class="plc-fft">
-              <div class="plc-fft-row"><span class="lbl">F<sub>rgb</sub></span><span class="arr">→ FFT →</span><span class="bands"><i class="lo">low</i><i class="hi">high</i></span></div>
-              <div class="plc-fft-row"><span class="lbl">F<sub>dep</sub></span><span class="arr">→ FFT →</span><span class="bands"><i class="lo">low</i><i class="hi">high</i></span></div>
-              <div class="plc-fft-mix">↓ mix · <em>CLIP(ingredients)</em> as key ↓</div>
-              <div class="plc-fft-out"><b>IFFT →</b> F<sub>fused</sub></div>
-            </div>
+          <div class="plc-art">
+            <img src="img/pl_fft.jpg" alt="IC-FAFM FFT magnitude with low and high frequency bands">
           </div>
-          <h4>IC-FAFM frequency fusion</h4>
-          <p>At every scale we 2-D FFT both feature maps. Depth dominates
-            the <b>low band</b> (shape, volume); RGB dominates the <b>high band</b>
-            (texture). The CLIP ingredient embedding conditions the mix so
-            "salmon, rice" emphasises protein-relevant bands differently from
-            "salad, oil".</p>
-          <div class="plc-tensor">F<sub>fused</sub> · ingredient-aware · 4 scales</div>
+          <h4>IC-FAFM fusion</h4>
+          <p>2-D FFT splits each map. Depth → <b>low band</b>, RGB → <b>high band</b>; CLIP(ingredients) gates the mix.</p>
+          <div class="plc-tensor">F<sub>fused</sub> · ingredient-aware</div>
         </article>
 
         <article class="plc-card plc-arrow-card">
@@ -815,10 +780,7 @@
             <div class="plc-cap">IA-MPH head</div>
           </div>
           <h4>Five numbers</h4>
-          <p>The Ingredient-Aware Multi-Prediction Head pools the four fused
-            scales, applies an ingredient-gated channel-selection block, then
-            five small linear heads emit the final predictions. Trained jointly
-            with per-nutrient MAE loss.</p>
+          <p>Ingredient-gated head → calories, mass, fat, carbs, protein.</p>
           <div class="plc-tensor">≈ 3 s end-to-end on RTX A6000 · head &lt; 30 ms</div>
         </article>
 
