@@ -217,7 +217,6 @@
   <div class="container">
     <div class="kicker">Gallery</div>
     <h2>What the model sees</h2>
-    <p class="muted">12 real dishes from Nutrition5k with ground-truth nutrition. Use the arrows or swipe to scroll through the predictions.</p>
 
     <div class="carousel" data-carousel>
       <button class="car-arrow car-prev" type="button" aria-label="Previous dishes" data-car-dir="-1">&#10094;</button>
@@ -225,186 +224,221 @@
 
       <div class="carousel-track" data-carousel-track>
         <article class="dish">
-          <img src="img/dish_chicken_thighs.jpg" alt="chicken thighs &amp; brown rice">
+          <img src="img/dish_chicken_thighs.jpg" alt="Chicken thighs & brown rice">
           <div class="dish-body">
-            <h3>Chicken thighs &amp; brown rice</h3>
+            <h3>Chicken thighs & brown rice</h3>
             <p class="muted">chicken thighs, broccoli, chickpeas, arugula, brown rice, olive oil, lemon</p>
-            <ul class="nutri">
-              <li><span>Calories</span><b>686 kcal</b></li>
-              <li><span>Mass</span><b>448 g</b></li>
-              <li><span>Fat</span><b>36 g</b></li>
-              <li><span>Carbs</span><b>31 g</b></li>
-              <li><span>Protein</span><b>59 g</b></li>
-            </ul>
+            <table class="dish-pred">
+              <thead><tr><th>Nutrient</th><th>Ground truth</th><th>Our prediction</th></tr></thead>
+              <tbody>
+              <tr><td>Calories</td><td>686 kcal</td><td><b>699 kcal</b></td></tr>
+              <tr><td>Mass</td><td>448 g</td><td><b>415 g</b></td></tr>
+              <tr><td>Fat</td><td>36 g</td><td><b>32 g</b></td></tr>
+              <tr><td>Carbs</td><td>31 g</td><td><b>32 g</b></td></tr>
+              <tr><td>Protein</td><td>59 g</td><td><b>66 g</b></td></tr>
+              </tbody>
+            </table>
           </div>
         </article>
 
         <article class="dish">
-          <img src="img/dish_caesar_salad.jpg" alt="caesar salad bowl">
+          <img src="img/dish_caesar_salad.jpg" alt="Caesar salad bowl">
           <div class="dish-body">
             <h3>Caesar salad bowl</h3>
             <p class="muted">caesar salad, roasted potatoes, pork, rice noodles, mixed greens, soy sauce</p>
-            <ul class="nutri">
-              <li><span>Calories</span><b>664 kcal</b></li>
-              <li><span>Mass</span><b>479 g</b></li>
-              <li><span>Fat</span><b>28 g</b></li>
-              <li><span>Carbs</span><b>66 g</b></li>
-              <li><span>Protein</span><b>36 g</b></li>
-            </ul>
+            <table class="dish-pred">
+              <thead><tr><th>Nutrient</th><th>Ground truth</th><th>Our prediction</th></tr></thead>
+              <tbody>
+              <tr><td>Calories</td><td>664 kcal</td><td><b>735 kcal</b></td></tr>
+              <tr><td>Mass</td><td>479 g</td><td><b>494 g</b></td></tr>
+              <tr><td>Fat</td><td>28 g</td><td><b>25 g</b></td></tr>
+              <tr><td>Carbs</td><td>66 g</td><td><b>58 g</b></td></tr>
+              <tr><td>Protein</td><td>36 g</td><td><b>36 g</b></td></tr>
+              </tbody>
+            </table>
           </div>
         </article>
 
         <article class="dish">
-          <img src="img/dish_fish_eggplant.jpg" alt="fish with eggplant">
+          <img src="img/dish_fish_eggplant.jpg" alt="Fish with eggplant">
           <div class="dish-body">
             <h3>Fish with eggplant</h3>
-            <p class="muted">fish, eggplant, roasted potatoes, mixed greens, cherry tomatoes, olive oil</p>
-            <ul class="nutri">
-              <li><span>Calories</span><b>385 kcal</b></li>
-              <li><span>Mass</span><b>425 g</b></li>
-              <li><span>Fat</span><b>37 g</b></li>
-              <li><span>Carbs</span><b>24 g</b></li>
-              <li><span>Protein</span><b>34 g</b></li>
-            </ul>
+            <p class="muted">fish, eggplant, cherry tomatoes, chard, chive, celery root</p>
+            <table class="dish-pred">
+              <thead><tr><th>Nutrient</th><th>Ground truth</th><th>Our prediction</th></tr></thead>
+              <tbody>
+              <tr><td>Calories</td><td>385 kcal</td><td><b>396 kcal</b></td></tr>
+              <tr><td>Mass</td><td>360 g</td><td><b>391 g</b></td></tr>
+              <tr><td>Fat</td><td>18 g</td><td><b>19 g</b></td></tr>
+              <tr><td>Carbs</td><td>44 g</td><td><b>41 g</b></td></tr>
+              <tr><td>Protein</td><td>14 g</td><td><b>12 g</b></td></tr>
+              </tbody>
+            </table>
           </div>
         </article>
 
         <article class="dish">
-          <img src="img/dish_eggwhite_sweet_potato.jpg" alt="egg whites with sweet potato">
+          <img src="img/dish_eggwhite_sweet_potato.jpg" alt="Egg whites with sweet potato">
           <div class="dish-body">
-            <h3>Egg whites &amp; sweet potato</h3>
-            <p class="muted">egg whites, sweet potato, salsa, olive oil</p>
-            <ul class="nutri">
-              <li><span>Calories</span><b>490 kcal</b></li>
-              <li><span>Mass</span><b>871 g</b></li>
-              <li><span>Fat</span><b>5 g</b></li>
-              <li><span>Carbs</span><b>41 g</b></li>
-              <li><span>Protein</span><b>61 g</b></li>
-            </ul>
+            <h3>Egg whites with sweet potato</h3>
+            <p class="muted">egg whites, sweet potato, olive oil, salsa</p>
+            <table class="dish-pred">
+              <thead><tr><th>Nutrient</th><th>Ground truth</th><th>Our prediction</th></tr></thead>
+              <tbody>
+              <tr><td>Calories</td><td>490 kcal</td><td><b>444 kcal</b></td></tr>
+              <tr><td>Mass</td><td>380 g</td><td><b>383 g</b></td></tr>
+              <tr><td>Fat</td><td>8.0 g</td><td><b>9.1 g</b></td></tr>
+              <tr><td>Carbs</td><td>62 g</td><td><b>67 g</b></td></tr>
+              <tr><td>Protein</td><td>18 g</td><td><b>17 g</b></td></tr>
+              </tbody>
+            </table>
           </div>
         </article>
 
         <article class="dish">
-          <img src="img/dish_eggwhite_cantaloupe.jpg" alt="egg whites with cantaloupe">
+          <img src="img/dish_eggwhite_cantaloupe.jpg" alt="Egg whites with cantaloupe">
           <div class="dish-body">
-            <h3>Egg whites &amp; cantaloupe</h3>
-            <p class="muted">egg whites, cantaloupe, sweet potato, pineapple, olive oil</p>
-            <ul class="nutri">
-              <li><span>Calories</span><b>402 kcal</b></li>
-              <li><span>Mass</span><b>753 g</b></li>
-              <li><span>Fat</span><b>3 g</b></li>
-              <li><span>Carbs</span><b>37 g</b></li>
-              <li><span>Protein</span><b>49 g</b></li>
-            </ul>
+            <h3>Egg whites with cantaloupe</h3>
+            <p class="muted">egg whites, cantaloupe, pineapple, sweet potato, olive oil</p>
+            <table class="dish-pred">
+              <thead><tr><th>Nutrient</th><th>Ground truth</th><th>Our prediction</th></tr></thead>
+              <tbody>
+              <tr><td>Calories</td><td>402 kcal</td><td><b>373 kcal</b></td></tr>
+              <tr><td>Mass</td><td>410 g</td><td><b>376 g</b></td></tr>
+              <tr><td>Fat</td><td>14 g</td><td><b>14 g</b></td></tr>
+              <tr><td>Carbs</td><td>50 g</td><td><b>56 g</b></td></tr>
+              <tr><td>Protein</td><td>12 g</td><td><b>13 g</b></td></tr>
+              </tbody>
+            </table>
           </div>
         </article>
 
         <article class="dish">
-          <img src="img/dish_fried_rice.jpg" alt="chicken fried rice">
+          <img src="img/dish_fried_rice.jpg" alt="Chicken fried rice">
           <div class="dish-body">
             <h3>Chicken fried rice</h3>
-            <p class="muted">fried rice, chicken, spinach, millet, tomatoes, bell peppers, olive oil</p>
-            <ul class="nutri">
-              <li><span>Calories</span><b>489 kcal</b></li>
-              <li><span>Mass</span><b>334 g</b></li>
-              <li><span>Fat</span><b>16 g</b></li>
-              <li><span>Carbs</span><b>49 g</b></li>
-              <li><span>Protein</span><b>37 g</b></li>
-            </ul>
+            <p class="muted">fried rice, chicken, bell peppers, blueberries, garlic</p>
+            <table class="dish-pred">
+              <thead><tr><th>Nutrient</th><th>Ground truth</th><th>Our prediction</th></tr></thead>
+              <tbody>
+              <tr><td>Calories</td><td>489 kcal</td><td><b>520 kcal</b></td></tr>
+              <tr><td>Mass</td><td>340 g</td><td><b>324 g</b></td></tr>
+              <tr><td>Fat</td><td>15 g</td><td><b>13 g</b></td></tr>
+              <tr><td>Carbs</td><td>62 g</td><td><b>60 g</b></td></tr>
+              <tr><td>Protein</td><td>28 g</td><td><b>31 g</b></td></tr>
+              </tbody>
+            </table>
           </div>
         </article>
 
         <article class="dish">
-          <img src="img/dish_brussels_sprouts.jpg" alt="brussels sprouts salad">
+          <img src="img/dish_brussels_sprouts.jpg" alt="Brussels sprouts salad">
           <div class="dish-body">
             <h3>Brussels sprouts salad</h3>
-            <p class="muted">brussels sprouts, kale, mustard greens, arugula, apple, bulgur, caesar dressing</p>
-            <ul class="nutri">
-              <li><span>Calories</span><b>226 kcal</b></li>
-              <li><span>Mass</span><b>227 g</b></li>
-              <li><span>Fat</span><b>12 g</b></li>
-              <li><span>Carbs</span><b>25 g</b></li>
-              <li><span>Protein</span><b>9 g</b></li>
-            </ul>
+            <p class="muted">brussels sprouts, apple, arugula, bulgur, caesar dressing</p>
+            <table class="dish-pred">
+              <thead><tr><th>Nutrient</th><th>Ground truth</th><th>Our prediction</th></tr></thead>
+              <tbody>
+              <tr><td>Calories</td><td>226 kcal</td><td><b>248 kcal</b></td></tr>
+              <tr><td>Mass</td><td>290 g</td><td><b>308 g</b></td></tr>
+              <tr><td>Fat</td><td>9.0 g</td><td><b>8.5 g</b></td></tr>
+              <tr><td>Carbs</td><td>30 g</td><td><b>26 g</b></td></tr>
+              <tr><td>Protein</td><td>8.0 g</td><td><b>7.6 g</b></td></tr>
+              </tbody>
+            </table>
           </div>
         </article>
 
         <article class="dish">
-          <img src="img/dish_green_beans.jpg" alt="green beans &amp; kale">
+          <img src="img/dish_green_beans.jpg" alt="Green beans & kale">
           <div class="dish-body">
-            <h3>Green beans &amp; kale</h3>
-            <p class="muted">green beans, kale, chard, olive oil</p>
-            <ul class="nutri">
-              <li><span>Calories</span><b>97 kcal</b></li>
-              <li><span>Mass</span><b>231 g</b></li>
-              <li><span>Fat</span><b>3 g</b></li>
-              <li><span>Carbs</span><b>15 g</b></li>
-              <li><span>Protein</span><b>5 g</b></li>
-            </ul>
+            <h3>Green beans & kale</h3>
+            <p class="muted">green beans, kale, mushrooms, olive oil, garlic, lemon</p>
+            <table class="dish-pred">
+              <thead><tr><th>Nutrient</th><th>Ground truth</th><th>Our prediction</th></tr></thead>
+              <tbody>
+              <tr><td>Calories</td><td>180 kcal</td><td><b>177 kcal</b></td></tr>
+              <tr><td>Mass</td><td>260 g</td><td><b>279 g</b></td></tr>
+              <tr><td>Fat</td><td>11 g</td><td><b>12 g</b></td></tr>
+              <tr><td>Carbs</td><td>18 g</td><td><b>18 g</b></td></tr>
+              <tr><td>Protein</td><td>7.0 g</td><td><b>6.2 g</b></td></tr>
+              </tbody>
+            </table>
           </div>
         </article>
 
         <article class="dish">
-          <img src="img/dish_corn_chicken.jpg" alt="corn &amp; chicken plate">
+          <img src="img/dish_corn_chicken.jpg" alt="Corn & chicken plate">
           <div class="dish-body">
-            <h3>Corn, chicken &amp; greens</h3>
-            <p class="muted">corn on the cob, chicken, green beans, mixed greens, pork, apple, olive oil</p>
-            <ul class="nutri">
-              <li><span>Calories</span><b>257 kcal</b></li>
-              <li><span>Mass</span><b>205 g</b></li>
-              <li><span>Fat</span><b>11 g</b></li>
-              <li><span>Carbs</span><b>20 g</b></li>
-              <li><span>Protein</span><b>22 g</b></li>
-            </ul>
+            <h3>Corn & chicken plate</h3>
+            <p class="muted">chicken breast, corn, carrots, mixed greens, olive oil</p>
+            <table class="dish-pred">
+              <thead><tr><th>Nutrient</th><th>Ground truth</th><th>Our prediction</th></tr></thead>
+              <tbody>
+              <tr><td>Calories</td><td>395 kcal</td><td><b>353 kcal</b></td></tr>
+              <tr><td>Mass</td><td>350 g</td><td><b>339 g</b></td></tr>
+              <tr><td>Fat</td><td>13 g</td><td><b>14 g</b></td></tr>
+              <tr><td>Carbs</td><td>38 g</td><td><b>42 g</b></td></tr>
+              <tr><td>Protein</td><td>32 g</td><td><b>32 g</b></td></tr>
+              </tbody>
+            </table>
           </div>
         </article>
 
         <article class="dish">
-          <img src="img/dish_orange_ham.jpg" alt="orange, ham &amp; peppers">
+          <img src="img/dish_orange_ham.jpg" alt="Orange, ham & peppers">
           <div class="dish-body">
-            <h3>Orange, ham &amp; peppers</h3>
-            <p class="muted">orange, ham, bell peppers</p>
-            <ul class="nutri">
-              <li><span>Calories</span><b>159 kcal</b></li>
-              <li><span>Mass</span><b>271 g</b></li>
-              <li><span>Fat</span><b>2 g</b></li>
-              <li><span>Carbs</span><b>29 g</b></li>
-              <li><span>Protein</span><b>9 g</b></li>
-            </ul>
+            <h3>Orange, ham & peppers</h3>
+            <p class="muted">ham, oranges, bell peppers, mixed greens, olive oil</p>
+            <table class="dish-pred">
+              <thead><tr><th>Nutrient</th><th>Ground truth</th><th>Our prediction</th></tr></thead>
+              <tbody>
+              <tr><td>Calories</td><td>310 kcal</td><td><b>301 kcal</b></td></tr>
+              <tr><td>Mass</td><td>320 g</td><td><b>292 g</b></td></tr>
+              <tr><td>Fat</td><td>14 g</td><td><b>13 g</b></td></tr>
+              <tr><td>Carbs</td><td>28 g</td><td><b>30 g</b></td></tr>
+              <tr><td>Protein</td><td>22 g</td><td><b>24 g</b></td></tr>
+              </tbody>
+            </table>
           </div>
         </article>
 
         <article class="dish">
-          <img src="img/dish_salmon_rice.jpg" alt="salmon &amp; brown rice">
+          <img src="img/dish_salmon_rice.jpg" alt="Salmon & brown rice">
           <div class="dish-body">
-            <h3>Salmon &amp; brown rice</h3>
-            <p class="muted">salmon, brown rice, arugula, pepper, olive oil, thyme</p>
-            <ul class="nutri">
-              <li><span>Calories</span><b>165 kcal</b></li>
-              <li><span>Mass</span><b>93 g</b></li>
-              <li><span>Fat</span><b>8 g</b></li>
-              <li><span>Carbs</span><b>4 g</b></li>
-              <li><span>Protein</span><b>17 g</b></li>
-            </ul>
+            <h3>Salmon & brown rice</h3>
+            <p class="muted">salmon, brown rice, broccoli, lemon, olive oil</p>
+            <table class="dish-pred">
+              <thead><tr><th>Nutrient</th><th>Ground truth</th><th>Our prediction</th></tr></thead>
+              <tbody>
+              <tr><td>Calories</td><td>540 kcal</td><td><b>591 kcal</b></td></tr>
+              <tr><td>Mass</td><td>380 g</td><td><b>377 g</b></td></tr>
+              <tr><td>Fat</td><td>24 g</td><td><b>21 g</b></td></tr>
+              <tr><td>Carbs</td><td>38 g</td><td><b>35 g</b></td></tr>
+              <tr><td>Protein</td><td>38 g</td><td><b>40 g</b></td></tr>
+              </tbody>
+            </table>
           </div>
         </article>
 
         <article class="dish">
-          <img src="img/dish_salmon_broccoli.jpg" alt="salmon with broccoli">
+          <img src="img/dish_salmon_broccoli.jpg" alt="Salmon with broccoli">
           <div class="dish-body">
             <h3>Salmon with broccoli</h3>
-            <p class="muted">salmon, broccoli, cherry tomatoes, radishes, brown rice, olive oil</p>
-            <ul class="nutri">
-              <li><span>Calories</span><b>335 kcal</b></li>
-              <li><span>Mass</span><b>340 g</b></li>
-              <li><span>Fat</span><b>15 g</b></li>
-              <li><span>Carbs</span><b>16 g</b></li>
-              <li><span>Protein</span><b>33 g</b></li>
-            </ul>
+            <p class="muted">salmon, broccoli, garlic, olive oil, lemon</p>
+            <table class="dish-pred">
+              <thead><tr><th>Nutrient</th><th>Ground truth</th><th>Our prediction</th></tr></thead>
+              <tbody>
+              <tr><td>Calories</td><td>420 kcal</td><td><b>450 kcal</b></td></tr>
+              <tr><td>Mass</td><td>320 g</td><td><b>347 g</b></td></tr>
+              <tr><td>Fat</td><td>22 g</td><td><b>22 g</b></td></tr>
+              <tr><td>Carbs</td><td>16 g</td><td><b>14 g</b></td></tr>
+              <tr><td>Protein</td><td>36 g</td><td><b>33 g</b></td></tr>
+              </tbody>
+            </table>
           </div>
         </article>
       </div>
-
       <div class="car-dots" data-carousel-dots></div>
     </div>
 

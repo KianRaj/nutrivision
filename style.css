@@ -262,6 +262,35 @@ hr { border: 0; border-top: 1px solid var(--border); margin: 24px 0; }
 .nutri li:first-child { border-top: 0; }
 .nutri b { color: var(--primary-2); }
 
+/* GT vs prediction table inside each dish card */
+.dish-pred {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  margin: 4px 0 0;
+  table-layout: fixed;
+}
+.dish-pred th,
+.dish-pred td {
+  padding: 6px 7px;
+  border-bottom: 1px solid var(--border);
+  text-align: right;
+  white-space: nowrap;
+}
+.dish-pred th:first-child,
+.dish-pred td:first-child { text-align: left; }
+.dish-pred th {
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  background: color-mix(in srgb, var(--primary) 5%, transparent);
+}
+.dish-pred tbody tr:last-child td { border-bottom: 0; }
+.dish-pred td:nth-child(3) b { color: var(--accent-2); font-weight: 700; }
+.dish-pred td:nth-child(2) { color: var(--fg-muted); }
+
 /* ───────────────────────── carousel ───────────────────────── */
 .carousel {
   position: relative;
