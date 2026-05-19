@@ -192,40 +192,31 @@ function initCarousel(root) {
 
 document.querySelectorAll("[data-carousel]").forEach(initCarousel);
 
-// ────────────────── paper-overview auto-slider ──────────────────
+// ────────────────── paper-overview horizontal auto-slider ──────────────────
 function initPaperSlider(root) {
-  const slides = Array.from(root.querySelectorAll(".po-slide"));
+  const track  = root.querySelector("[data-paper-track]");
+  const slides = track ? Array.from(track.children) : [];
   const dots   = Array.from(root.querySelectorAll("[data-paper-dots] button"));
-  const interval = parseInt(root.dataset.interval || "7000", 10);
-  if (slides.length < 2) return;
+  const interval = parseInt(root.dataset.interval || "6000", 10);
+  if (!track || slides.length < 2) return;
 
   let i = 0, timer = null, paused = false;
+  const N = slides.length;
 
   function show(next) {
-    if (next === i) return;
-    slides[i].classList.add("is-leaving");
-    slides[i].classList.remove("is-active");
-    dots[i]?.classList.remove("is-active");
-    slides[next].classList.remove("is-leaving");
-    slides[next].classList.add("is-active");
-    dots[next]?.classList.add("is-active");
-    i = next;
+    i = ((next % N) + N) % N;
+    track.style.transform = `translateX(-${(100 / N) * i}%)`;
+    dots.forEach((d, k) => d.classList.toggle("is-active", k === i));
   }
+  function start() { stop(); timer = setInterval(() => { if (!paused) show(i + 1); }, interval); }
+  function stop()  { if (timer) { clearInterval(timer); timer = null; } }
 
-  function start() {
-    stop();
-    timer = setInterval(() => { if (!paused) show((i + 1) % slides.length); }, interval);
-  }
-  function stop() { if (timer) { clearInterval(timer); timer = null; } }
-
-  dots.forEach((d, idx) => d.addEventListener("click", () => {
-    show(idx); start();   // reset cadence on manual change
-  }));
+  dots.forEach((d, idx) => d.addEventListener("click", () => { show(idx); start(); }));
   root.addEventListener("mouseenter", () => { paused = true;  });
   root.addEventListener("mouseleave", () => { paused = false; });
   root.addEventListener("focusin",    () => { paused = true;  });
   root.addEventListener("focusout",   () => { paused = false; });
 
-  start();
+  show(0); start();
 }
 document.querySelectorAll("[data-paper-slider]").forEach(initPaperSlider);

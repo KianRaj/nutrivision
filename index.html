@@ -57,52 +57,52 @@
 <section id="overview" class="section">
   <div class="container narrow">
 
-    <article class="paper-overview compact" data-paper-slider data-interval="7000">
+    <article class="paper-overview compact" data-paper-slider data-interval="6000">
       <header class="po-head">
-        <span class="po-tag">NutriVision · Research preview</span>
-        <h2>Ingredient-aware hierarchical frequency fusion for single-image food nutrition estimation</h2>
+        <span class="po-tag">Research preview · NutriVision</span>
+        <h2>Single-image food nutrition estimation, with ingredient-aware frequency fusion.</h2>
       </header>
 
       <div class="po-stage">
+        <div class="po-track" data-paper-track>
 
-        <section class="po-slide is-active" data-slide="0">
-          <h3>Abstract</h3>
-          <p>
-            We estimate <b>calories, mass, fat, carbs, protein</b> from a single RGB plate photo.
-            Prior systems need real depth sensors, multi-view rigs, or hand-curated ingredients.
-            <b>NutriVision</b> uses a dual ConvNeXt-Base backbone, an ingredient-conditioned
-            frequency-fusion module (<b>IC-FAFM</b>), and an ingredient-aware multi-prediction
-            head (<b>IA-MPH</b>) over RGB&nbsp;+&nbsp;DA3 depth&nbsp;+&nbsp;CLIP text.
-          </p>
-          <p class="po-key">
-            <span class="key-num">13.48 %</span> PMAE on Nutrition5k ·
-            <span class="key-num">10.89 %</span> on OmniFood8K — beats every depth-using baseline.
-          </p>
-        </section>
+          <section class="po-slide">
+            <h3>Abstract</h3>
+            <p>
+              From one RGB plate photo we predict <b>calories, mass, fat, carbs, protein</b> — no
+              depth sensor, no rig. A dual ConvNeXt-Base + <b>IC-FAFM</b> frequency fusion + <b>IA-MPH</b>
+              head, conditioned on CLIP-encoded ingredients.
+            </p>
+            <p class="po-key">
+              <span class="key-num">13.48 %</span> Nutrition5k ·
+              <span class="key-num">10.89 %</span> OmniFood8K — beats every depth-using baseline.
+            </p>
+          </section>
 
-        <section class="po-slide" data-slide="1">
-          <h3>Why this is hard</h3>
-          <p>Two unknowns from one flat photo:</p>
-          <ul class="po-bullets">
-            <li><b>What</b> is on the plate (ingredient identity).</li>
-            <li><b>How much</b> of it (3-D volume × density).</li>
-          </ul>
-          <p class="po-key">
-            We re-introduce geometry via <em>estimated</em> depth and semantics via
-            <em>ingredient text</em>, then fuse them in the <em>frequency domain</em>.
-          </p>
-        </section>
+          <section class="po-slide">
+            <h3>Why this is hard</h3>
+            <p>From one flat photo, both unknowns must come back:</p>
+            <ul class="po-bullets">
+              <li><b>What</b> is on the plate &nbsp;(ingredients).</li>
+              <li><b>How much</b> of it &nbsp;(3-D volume × density).</li>
+            </ul>
+            <p class="po-key">
+              Geometry returns via <em>estimated</em> depth; semantics via <em>ingredient text</em> —
+              fused in the frequency domain.
+            </p>
+          </section>
 
-        <section class="po-slide" data-slide="2">
-          <h3>Contributions</h3>
-          <ol class="contributions tight">
-            <li><b>IC-FAFM</b> — FFT fusion: depth → low band, RGB → high band, CLIP-gated mix.</li>
-            <li><b>IA-MPH</b> — ingredient-gated 1×1 cross-attention head, jointly emits 5 nutrients.</li>
-            <li><b>Two-dataset SOTA</b> — <span class="key-num">13.48 %</span> N5k · <span class="key-num">10.89 %</span> Omni.</li>
-            <li><b>Honest SSRA ablation</b> — Δ ≤ 0.1 % PMAE; the v1 → v2 depth-loader fix is the real win.</li>
-          </ol>
-        </section>
+          <section class="po-slide">
+            <h3>Contributions</h3>
+            <ol class="contributions tight">
+              <li><b>IC-FAFM</b> — depth → low band · RGB → high band · CLIP-gated mix.</li>
+              <li><b>IA-MPH</b> — ingredient-gated head, 5 nutrients jointly.</li>
+              <li><b>Two-dataset SOTA</b> &nbsp;<span class="key-num">13.48 %</span> N5k · <span class="key-num">10.89 %</span> Omni.</li>
+              <li><b>Honest SSRA ablation</b> — Δ ≤ 0.1 % PMAE; depth-loader fix is the real win.</li>
+            </ol>
+          </section>
 
+        </div>
       </div>
 
       <div class="po-dots" data-paper-dots>
