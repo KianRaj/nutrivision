@@ -54,6 +54,42 @@
   </div>
 </header>
 
+<!-- =================== LIVE DEMO (moved to top) =================== -->
+<section id="demo" class="section demo-top">
+  <div class="container narrow">
+    <div class="kicker">Live demo</div>
+    <h2>Try it on your own photo</h2>
+    <p class="muted" id="demo-blurb">Upload a plated-meal photo. Auto-suggest will hint at the ingredients via BLIP&nbsp;+&nbsp;CLIP; you can edit before predicting. Expected error band: ±13.52% PMAE.</p>
+
+    <form id="predict-form" class="card" enctype="multipart/form-data">
+      <label class="dropzone">
+        <input type="file" name="image" id="image-input" accept="image/*">
+        <span id="dropzone-label">Click or drop a food image</span>
+        <img id="preview" alt="">
+      </label>
+
+      <div class="row">
+        <label for="ingredients">Ingredients (comma-separated)</label>
+        <button type="button" id="suggest-btn" class="ghost">Auto-suggest</button>
+      </div>
+      <textarea id="ingredients" name="ingredients" rows="2"
+                placeholder="e.g. chicken, rice, broccoli, soy sauce"></textarea>
+      <p id="caption" class="muted"></p>
+
+      <button type="submit" id="predict-btn" class="primary">Predict nutrition</button>
+    </form>
+
+    <section class="card hidden" id="results-card">
+      <h2>Estimated nutrition</h2>
+      <table id="results-table" class="results">
+        <thead><tr><th>Nutrient</th><th>Estimate</th><th>± PMAE band</th><th>% DV</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <p class="muted" id="meta"></p>
+    </section>
+  </div>
+</section>
+
 <section id="overview" class="section">
   <div class="container narrow">
     <div class="kicker">Overview</div>
@@ -79,6 +115,12 @@
     <div class="kicker">Method</div>
     <h2>Architecture</h2>
     <p class="muted">RGB and DA3 depth pass through a dual ConvNeXt-Base + ISM stack; CLIP-encoded ingredient text conditions both the frequency-domain fusion (IC-FAFM) and the prediction head (IA-MPH).</p>
+
+    <!-- ╔══ Architecture diagram slot ═════════════════════════════════════
+         ║  Current file: docs/img/architecture.png
+         ║  To update: drop your new diagram at the same path with the
+         ║  same filename (or change the src below). Both PNG and SVG work.
+         ╚══════════════════════════════════════════════════════════════════ -->
     <img src="img/architecture.png" alt="NutriVision architecture diagram" class="arch">
 
     <div class="cards">
@@ -175,92 +217,199 @@
   <div class="container">
     <div class="kicker">Gallery</div>
     <h2>What the model sees</h2>
-    <p class="muted">For each food photo, we run DepthAnything V3 for monocular depth and use CLIP-encoded ingredient text to guide the fusion. Below are three samples from Nutrition5k.</p>
+    <p class="muted">12 real dishes from Nutrition5k with ground-truth nutrition. Use the arrows or swipe to scroll through the predictions.</p>
 
-    <div class="gallery">
-      <article class="dish">
-        <img src="img/sample_chicken_rice.jpg" alt="chicken bowl">
-        <div class="dish-body">
-          <h3>Chicken &amp; brown rice bowl</h3>
-          <p class="muted">arugula, basil, broccoli, brown rice, chicken thigh, garlic, lemon</p>
-          <ul class="nutri">
-            <li><span>Calories</span><b>686 kcal</b></li>
-            <li><span>Mass</span><b>420 g</b></li>
-            <li><span>Fat</span><b>27 g</b></li>
-            <li><span>Carbs</span><b>58 g</b></li>
-            <li><span>Protein</span><b>52 g</b></li>
-          </ul>
-        </div>
-      </article>
+    <div class="carousel" data-carousel>
+      <button class="car-arrow car-prev" type="button" aria-label="Previous dishes" data-car-dir="-1">&#10094;</button>
+      <button class="car-arrow car-next" type="button" aria-label="Next dishes"     data-car-dir="1">&#10095;</button>
 
-      <article class="dish">
-        <img src="img/sample_eggplant.jpg" alt="eggplant salad">
-        <div class="dish-body">
-          <h3>Eggplant medley</h3>
-          <p class="muted">celery root, chard, cherry tomatoes, chive, eggplant</p>
-          <ul class="nutri">
-            <li><span>Calories</span><b>385 kcal</b></li>
-            <li><span>Mass</span><b>360 g</b></li>
-            <li><span>Fat</span><b>18 g</b></li>
-            <li><span>Carbs</span><b>44 g</b></li>
-            <li><span>Protein</span><b>14 g</b></li>
-          </ul>
-        </div>
-      </article>
+      <div class="carousel-track" data-carousel-track>
+        <article class="dish">
+          <img src="img/dish_chicken_thighs.jpg" alt="chicken thighs &amp; brown rice">
+          <div class="dish-body">
+            <h3>Chicken thighs &amp; brown rice</h3>
+            <p class="muted">chicken thighs, broccoli, chickpeas, arugula, brown rice, olive oil, lemon</p>
+            <ul class="nutri">
+              <li><span>Calories</span><b>686 kcal</b></li>
+              <li><span>Mass</span><b>448 g</b></li>
+              <li><span>Fat</span><b>36 g</b></li>
+              <li><span>Carbs</span><b>31 g</b></li>
+              <li><span>Protein</span><b>59 g</b></li>
+            </ul>
+          </div>
+        </article>
 
-      <article class="dish">
-        <img src="img/sample_fried_rice.jpg" alt="fried rice bowl">
-        <div class="dish-body">
-          <h3>Fried rice bowl</h3>
-          <p class="muted">bell peppers, blueberries, chicken, fried rice, garlic</p>
-          <ul class="nutri">
-            <li><span>Calories</span><b>489 kcal</b></li>
-            <li><span>Mass</span><b>340 g</b></li>
-            <li><span>Fat</span><b>15 g</b></li>
-            <li><span>Carbs</span><b>62 g</b></li>
-            <li><span>Protein</span><b>28 g</b></li>
-          </ul>
-        </div>
-      </article>
+        <article class="dish">
+          <img src="img/dish_caesar_salad.jpg" alt="caesar salad bowl">
+          <div class="dish-body">
+            <h3>Caesar salad bowl</h3>
+            <p class="muted">caesar salad, roasted potatoes, pork, rice noodles, mixed greens, soy sauce</p>
+            <ul class="nutri">
+              <li><span>Calories</span><b>664 kcal</b></li>
+              <li><span>Mass</span><b>479 g</b></li>
+              <li><span>Fat</span><b>28 g</b></li>
+              <li><span>Carbs</span><b>66 g</b></li>
+              <li><span>Protein</span><b>36 g</b></li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="dish">
+          <img src="img/dish_fish_eggplant.jpg" alt="fish with eggplant">
+          <div class="dish-body">
+            <h3>Fish with eggplant</h3>
+            <p class="muted">fish, eggplant, roasted potatoes, mixed greens, cherry tomatoes, olive oil</p>
+            <ul class="nutri">
+              <li><span>Calories</span><b>385 kcal</b></li>
+              <li><span>Mass</span><b>425 g</b></li>
+              <li><span>Fat</span><b>37 g</b></li>
+              <li><span>Carbs</span><b>24 g</b></li>
+              <li><span>Protein</span><b>34 g</b></li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="dish">
+          <img src="img/dish_eggwhite_sweet_potato.jpg" alt="egg whites with sweet potato">
+          <div class="dish-body">
+            <h3>Egg whites &amp; sweet potato</h3>
+            <p class="muted">egg whites, sweet potato, salsa, olive oil</p>
+            <ul class="nutri">
+              <li><span>Calories</span><b>490 kcal</b></li>
+              <li><span>Mass</span><b>871 g</b></li>
+              <li><span>Fat</span><b>5 g</b></li>
+              <li><span>Carbs</span><b>41 g</b></li>
+              <li><span>Protein</span><b>61 g</b></li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="dish">
+          <img src="img/dish_eggwhite_cantaloupe.jpg" alt="egg whites with cantaloupe">
+          <div class="dish-body">
+            <h3>Egg whites &amp; cantaloupe</h3>
+            <p class="muted">egg whites, cantaloupe, sweet potato, pineapple, olive oil</p>
+            <ul class="nutri">
+              <li><span>Calories</span><b>402 kcal</b></li>
+              <li><span>Mass</span><b>753 g</b></li>
+              <li><span>Fat</span><b>3 g</b></li>
+              <li><span>Carbs</span><b>37 g</b></li>
+              <li><span>Protein</span><b>49 g</b></li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="dish">
+          <img src="img/dish_fried_rice.jpg" alt="chicken fried rice">
+          <div class="dish-body">
+            <h3>Chicken fried rice</h3>
+            <p class="muted">fried rice, chicken, spinach, millet, tomatoes, bell peppers, olive oil</p>
+            <ul class="nutri">
+              <li><span>Calories</span><b>489 kcal</b></li>
+              <li><span>Mass</span><b>334 g</b></li>
+              <li><span>Fat</span><b>16 g</b></li>
+              <li><span>Carbs</span><b>49 g</b></li>
+              <li><span>Protein</span><b>37 g</b></li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="dish">
+          <img src="img/dish_brussels_sprouts.jpg" alt="brussels sprouts salad">
+          <div class="dish-body">
+            <h3>Brussels sprouts salad</h3>
+            <p class="muted">brussels sprouts, kale, mustard greens, arugula, apple, bulgur, caesar dressing</p>
+            <ul class="nutri">
+              <li><span>Calories</span><b>226 kcal</b></li>
+              <li><span>Mass</span><b>227 g</b></li>
+              <li><span>Fat</span><b>12 g</b></li>
+              <li><span>Carbs</span><b>25 g</b></li>
+              <li><span>Protein</span><b>9 g</b></li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="dish">
+          <img src="img/dish_green_beans.jpg" alt="green beans &amp; kale">
+          <div class="dish-body">
+            <h3>Green beans &amp; kale</h3>
+            <p class="muted">green beans, kale, chard, olive oil</p>
+            <ul class="nutri">
+              <li><span>Calories</span><b>97 kcal</b></li>
+              <li><span>Mass</span><b>231 g</b></li>
+              <li><span>Fat</span><b>3 g</b></li>
+              <li><span>Carbs</span><b>15 g</b></li>
+              <li><span>Protein</span><b>5 g</b></li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="dish">
+          <img src="img/dish_corn_chicken.jpg" alt="corn &amp; chicken plate">
+          <div class="dish-body">
+            <h3>Corn, chicken &amp; greens</h3>
+            <p class="muted">corn on the cob, chicken, green beans, mixed greens, pork, apple, olive oil</p>
+            <ul class="nutri">
+              <li><span>Calories</span><b>257 kcal</b></li>
+              <li><span>Mass</span><b>205 g</b></li>
+              <li><span>Fat</span><b>11 g</b></li>
+              <li><span>Carbs</span><b>20 g</b></li>
+              <li><span>Protein</span><b>22 g</b></li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="dish">
+          <img src="img/dish_orange_ham.jpg" alt="orange, ham &amp; peppers">
+          <div class="dish-body">
+            <h3>Orange, ham &amp; peppers</h3>
+            <p class="muted">orange, ham, bell peppers</p>
+            <ul class="nutri">
+              <li><span>Calories</span><b>159 kcal</b></li>
+              <li><span>Mass</span><b>271 g</b></li>
+              <li><span>Fat</span><b>2 g</b></li>
+              <li><span>Carbs</span><b>29 g</b></li>
+              <li><span>Protein</span><b>9 g</b></li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="dish">
+          <img src="img/dish_salmon_rice.jpg" alt="salmon &amp; brown rice">
+          <div class="dish-body">
+            <h3>Salmon &amp; brown rice</h3>
+            <p class="muted">salmon, brown rice, arugula, pepper, olive oil, thyme</p>
+            <ul class="nutri">
+              <li><span>Calories</span><b>165 kcal</b></li>
+              <li><span>Mass</span><b>93 g</b></li>
+              <li><span>Fat</span><b>8 g</b></li>
+              <li><span>Carbs</span><b>4 g</b></li>
+              <li><span>Protein</span><b>17 g</b></li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="dish">
+          <img src="img/dish_salmon_broccoli.jpg" alt="salmon with broccoli">
+          <div class="dish-body">
+            <h3>Salmon with broccoli</h3>
+            <p class="muted">salmon, broccoli, cherry tomatoes, radishes, brown rice, olive oil</p>
+            <ul class="nutri">
+              <li><span>Calories</span><b>335 kcal</b></li>
+              <li><span>Mass</span><b>340 g</b></li>
+              <li><span>Fat</span><b>15 g</b></li>
+              <li><span>Carbs</span><b>16 g</b></li>
+              <li><span>Protein</span><b>33 g</b></li>
+            </ul>
+          </div>
+        </article>
+      </div>
+
+      <div class="car-dots" data-carousel-dots></div>
     </div>
 
     <h3 class="tbl-title" style="margin-top:40px">RGB / DA3 depth / SAM3 mask</h3>
     <img src="img/triptych.png" alt="triptych RGB-depth-mask" class="arch" style="max-width:780px">
-  </div>
-</section>
-
-<section id="demo" class="section">
-  <div class="container narrow">
-    <div class="kicker">Live demo</div>
-    <h2>Try it on your own photo</h2>
-    <p class="muted" id="demo-blurb">Upload a plated-meal photo. Auto-suggest will hint at the ingredients via BLIP&nbsp;+&nbsp;CLIP; you can edit before predicting. Expected error band: ±13.52% PMAE.</p>
-
-    <form id="predict-form" class="card" enctype="multipart/form-data">
-      <label class="dropzone">
-        <input type="file" name="image" id="image-input" accept="image/*">
-        <span id="dropzone-label">Click or drop a food image</span>
-        <img id="preview" alt="">
-      </label>
-
-      <div class="row">
-        <label for="ingredients">Ingredients (comma-separated)</label>
-        <button type="button" id="suggest-btn" class="ghost">Auto-suggest</button>
-      </div>
-      <textarea id="ingredients" name="ingredients" rows="2"
-                placeholder="e.g. chicken, rice, broccoli, soy sauce"></textarea>
-      <p id="caption" class="muted"></p>
-
-      <button type="submit" id="predict-btn" class="primary">Predict nutrition</button>
-    </form>
-
-    <section class="card hidden" id="results-card">
-      <h2>Estimated nutrition</h2>
-      <table id="results-table" class="results">
-        <thead><tr><th>Nutrient</th><th>Estimate</th><th>± PMAE band</th><th>% DV</th></tr></thead>
-        <tbody></tbody>
-      </table>
-      <p class="muted" id="meta"></p>
-    </section>
   </div>
 </section>
 
@@ -292,7 +441,7 @@
       </div>
     </div>
     <hr>
-    <p class="muted small">© NutriVision Research Project. Powered by Om-IGSMNet (ConvNeXt-B + DA3 + CLIP).</p>
+    <p class="muted small">© NutriVision Research Project. ConvNeXt-B backbone + DepthAnything-V2 + CLIP ViT-B/32.</p>
   </div>
 </footer>
 

@@ -67,6 +67,92 @@ serve from `/docs` without copying anywhere:
 
 The URL becomes `https://<you>.github.io/<repo-name>/`.
 
+## Update the live site (push changes from the institute server to GitHub)
+
+Whenever the `docs/` folder on the institute server changes
+(new results, new images, layout tweaks, etc.), follow this loop to push
+the updates so they appear at `https://kianraj.github.io/nutrivision/`.
+
+### A. Make sure your local repo folder exists
+
+The Pages repo lives at `C:\Users\LENOVO\Desktop\nutrivision-site\` on the
+laptop. If you've moved it, find it with:
+
+```cmd
+where /r C:\Users\LENOVO index.html
+```
+
+### B. Pull the updated files from the institute server
+
+> ⚠️ **Important** — use the right shell. The commands below are written
+> for **Command Prompt** (`cmd.exe`). If you open **PowerShell** or
+> **Windows Terminal** instead, replace any `%VAR%` with `$env:VAR`.
+
+Replace `<institute-server-host>` with your actual SSH host (the same
+one you SSH into normally, e.g. `bhandari.iiitd.ac.in`).
+
+**Command Prompt (cmd.exe):**
+
+```cmd
+cd C:\Users\LENOVO\Desktop\nutrivision-site
+
+scp -r aman24012@<institute-server-host>:/media/nas_mount/research3/aman_kr/midas/Om_IGSM_v2/docs/* .
+```
+
+**PowerShell / Windows Terminal:**
+
+```powershell
+cd $env:USERPROFILE\Desktop\nutrivision-site
+
+scp -r aman24012@<institute-server-host>:/media/nas_mount/research3/aman_kr/midas/Om_IGSM_v2/docs/* .
+```
+
+**Mac/Linux:**
+
+```bash
+cd ~/Desktop/nutrivision-site
+
+scp -r aman24012@<institute-server-host>:/media/nas_mount/research3/aman_kr/midas/Om_IGSM_v2/docs/* .
+```
+
+When `scp` prompts for the password, enter your **institute-server**
+password (not your GitHub one).
+
+### C. Commit + push to GitHub
+
+```cmd
+git add .
+git status
+git commit -m "Update landing page from institute server"
+git push
+```
+
+When `git push` prompts for credentials:
+* Username: `KianRaj`
+* Password: your **Personal Access Token** (the `ghp_…` string from
+  <https://github.com/settings/tokens>) — *not* your GitHub login password.
+
+### D. Verify the deploy
+
+1. GitHub Actions builds the Pages site automatically. Watch progress at
+   <https://github.com/KianRaj/nutrivision/actions> — wait for the green
+   check (~60 seconds).
+2. Hard-refresh the live URL to bust the browser cache:
+   * **Chrome/Edge/Firefox on Windows/Linux:** `Ctrl + Shift + R`
+   * **Safari/Chrome on Mac:** `Cmd + Shift + R`
+3. <https://kianraj.github.io/nutrivision/> should now show the updates.
+
+### E. Common errors and fixes
+
+| Error message | Cause | Fix |
+|---|---|---|
+| `cd: $env:USERPROFILE\Desktop\nutrivision-site: No such file or directory` | You're in cmd.exe but using PowerShell syntax | Use `cd C:\Users\LENOVO\Desktop\nutrivision-site` (literal path) in cmd, or switch to PowerShell |
+| `fatal: not a git repository` | You're not inside the cloned Pages repo | `cd` into `nutrivision-site` first; use `where /r C:\Users\LENOVO index.html` to find it |
+| `Permission denied (publickey,password)` on `scp` | Wrong username or unreachable host | Replace `aman24012` and `<institute-server-host>` with your actual SSH login |
+| `remote: Repository not found` on `git push` | Repo URL is wrong or token doesn't have access | Check `git remote -v`; verify the token has `repo` scope |
+| `Authentication failed` on `git push` | Used password instead of Personal Access Token | Generate a new token at <https://github.com/settings/tokens/new> with `repo` scope; use it as the password |
+| Page still shows old content after push | Browser cache | Hard-refresh (`Ctrl + Shift + R`). If still stale, check Actions tab — the build may still be running |
+
 ## Connect the live demo to your backend
 
 The static page on Pages can call your Flask backend if it's reachable. The

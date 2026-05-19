@@ -124,3 +124,70 @@ function renderResults(j) {
   resultsCard.classList.remove("hidden");
   resultsCard.scrollIntoView({ behavior: "smooth", block: "start" });
 }
+
+// ────────────────── dish carousel ──────────────────
+// Scroll-snap track + prev/next arrows + page-dot indicator.
+// Supports keyboard ← → when the carousel is focused, plus swipe (native).
+function initCarousel(root) {
+  const track = root.querySelector("[data-carousel-track]");
+  const dotsWrap = root.querySelector("[data-carousel-dots]");
+  const prevBtn = root.querySelector(".car-prev");
+  const nextBtn = root.querySelector(".car-next");
+  if (!track) return;
+
+  const cards = Array.from(track.children);
+  if (cards.length === 0) return;
+
+  // step = card width + gap
+  const styles = window.getComputedStyle(track);
+  const gap = parseFloat(styles.columnGap || styles.gap || "0") || 0;
+  const step = () => cards[0].getBoundingClientRect().width + gap;
+
+  // build dots — one per card (kept simple; visible cards depend on viewport)
+  if (dotsWrap) {
+    dotsWrap.innerHTML = "";
+    cards.forEach((_, i) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.setAttribute("aria-label", `Go to dish ${i + 1}`);
+      b.addEventListener("click", () => {
+        track.scrollTo({ left: i * step(), behavior: "smooth" });
+      });
+      dotsWrap.appendChild(b);
+    });
+  }
+
+  function update() {
+    const max = track.scrollWidth - track.clientWidth - 1;
+    const left = track.scrollLeft;
+    if (prevBtn) prevBtn.disabled = left <= 0;
+    if (nextBtn) nextBtn.disabled = left >= max;
+    if (dotsWrap) {
+      const idx = Math.round(left / step());
+      Array.from(dotsWrap.children).forEach((d, i) =>
+        d.setAttribute("aria-current", i === idx ? "true" : "false")
+      );
+    }
+  }
+
+  function scrollBy(dir) {
+    // scroll by one card; on wide viewports the user still sees several
+    track.scrollBy({ left: dir * step(), behavior: "smooth" });
+  }
+
+  prevBtn?.addEventListener("click", () => scrollBy(-1));
+  nextBtn?.addEventListener("click", () => scrollBy(1));
+  track.addEventListener("scroll", update, { passive: true });
+  window.addEventListener("resize", update);
+
+  // keyboard support — only when the carousel area has focus
+  root.tabIndex = -1;
+  root.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowLeft")  { e.preventDefault(); scrollBy(-1); }
+    if (e.key === "ArrowRight") { e.preventDefault(); scrollBy(1);  }
+  });
+
+  update();
+}
+
+document.querySelectorAll("[data-carousel]").forEach(initCarousel);
