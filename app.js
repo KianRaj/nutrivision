@@ -1,9 +1,11 @@
 // NutriVision static site — used on GitHub Pages.
 // The live demo POSTs to API_URL.  If empty/null, the demo gracefully degrades.
 
-// ★★★  PASTE YOUR CLOUDFLARE TUNNEL URL HERE  ★★★
-// e.g. const API_URL = "https://orange-pancake-22.trycloudflare.com";
-const API_URL = "";
+// ★★★  PERMANENT API URL  ★★★
+// Cloudflare Worker proxy in front of the institute-server Flask backend.
+// This Worker URL never changes; if the upstream tunnel rotates, only
+// the UPSTREAM line in nutrivision-worker/src/worker.js needs an edit.
+const API_URL = "https://nutrivision.aman24012.workers.dev";
 
 // ────────────────── theme cycle (academic → forest → dark) ──────────────────
 const THEMES = ["academic", "forest", "dark"];
