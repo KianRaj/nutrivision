@@ -1,0 +1,23 @@
+# Cloudflare Workers config — Git-based deploys.
+#
+# This file tells Cloudflare's build pipeline:
+#   - what to call the Worker
+#   - where the entry script lives
+#   - which Workers runtime version to target
+#
+# On every push to `main`, Cloudflare:
+#   1. Clones this repo.
+#   2. Reads this wrangler.toml.
+#   3. Bundles src/worker.js.
+#   4. Deploys it to https://nutrivision.aman24012.workers.dev
+#
+# Cost: $0. Free tier covers 100,000 requests/day.
+
+name               = "nutrivision"
+main               = "src/worker.js"
+compatibility_date = "2026-05-21"
+# v2 — force redeploy after Root Directory fix
+
+# Optional: keep observability logs for 7 days (free).
+[observability]
+enabled = true
