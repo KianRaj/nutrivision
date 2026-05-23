@@ -1,0 +1,168 @@
+name: Build & deploy NutriVision to AWS Lambda
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "lambda/**"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch: {}
+
+env:
+  AWS_REGION:        ap-south-1
+  ECR_REPOSITORY:    nutrivision
+  LAMBDA_FUNCTION:   nutrivision
+  LAMBDA_MEMORY_MB:  4096
+  LAMBDA_TIMEOUT_S:  300
+  LAMBDA_ROLE_NAME:  nutrivision-lambda-role
+  BUILD_DIR:         lambda
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      # ──────────────────────────── source ────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Free disk space (the Lambda image is ~4 GB)
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          sudo apt-get clean
+          df -h | head -5
+
+      # ──────────────────────────── aws ───────────────────────────────
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region:            ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Ensure ECR repository exists
+        run: |
+          aws ecr describe-repositories \
+              --repository-names "${ECR_REPOSITORY}" \
+              --region "${AWS_REGION}" \
+            || aws ecr create-repository \
+                  --repository-name "${ECR_REPOSITORY}" \
+                  --region "${AWS_REGION}" \
+                  --image-scanning-configuration scanOnPush=true
+
+      # ──────────────────────────── docker ────────────────────────────
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build, tag, push image (linux/amd64 for Lambda)
+        env:
+          REG:    ${{ steps.ecr.outputs.registry }}
+          TAG_A:  ${{ github.sha }}
+          TAG_B:  latest
+        run: |
+          cd "${BUILD_DIR}"
+          IMG="${REG}/${ECR_REPOSITORY}"
+          docker buildx build --platform linux/amd64 --provenance=false \
+                              -t "${IMG}:${TAG_A}" -t "${IMG}:${TAG_B}" \
+                              --push .
+
+      # ──────────────────────────── lambda ────────────────────────────
+      - name: Ensure Lambda execution role exists
+        run: |
+          if aws iam get-role --role-name "${LAMBDA_ROLE_NAME}" >/dev/null 2>&1; then
+            echo "Role already exists"
+          else
+            cat > /tmp/trust.json <<'JSON'
+          {
+            "Version": "2012-10-17",
+            "Statement": [{
+              "Effect": "Allow",
+              "Principal": { "Service": "lambda.amazonaws.com" },
+              "Action": "sts:AssumeRole"
+            }]
+          }
+          JSON
+            aws iam create-role \
+                --role-name "${LAMBDA_ROLE_NAME}" \
+                --assume-role-policy-document file:///tmp/trust.json
+            aws iam attach-role-policy \
+                --role-name "${LAMBDA_ROLE_NAME}" \
+                --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+            # IAM consistency window
+            sleep 15
+          fi
+
+      - name: Create or update Lambda function
+        env:
+          REG:    ${{ steps.ecr.outputs.registry }}
+          TAG_A:  ${{ github.sha }}
+        run: |
+          IMG_URI="${REG}/${ECR_REPOSITORY}:${TAG_A}"
+          ROLE_ARN="$(aws iam get-role --role-name "${LAMBDA_ROLE_NAME}" --query Role.Arn --output text)"
+          if aws lambda get-function --function-name "${LAMBDA_FUNCTION}" \
+                 --region "${AWS_REGION}" >/dev/null 2>&1; then
+            echo "Updating existing function code…"
+            aws lambda update-function-code \
+                --function-name "${LAMBDA_FUNCTION}" \
+                --image-uri "${IMG_URI}" \
+                --region "${AWS_REGION}" \
+                --publish
+            aws lambda wait function-updated \
+                --function-name "${LAMBDA_FUNCTION}" \
+                --region "${AWS_REGION}"
+            aws lambda update-function-configuration \
+                --function-name "${LAMBDA_FUNCTION}" \
+                --memory-size "${LAMBDA_MEMORY_MB}" \
+                --timeout "${LAMBDA_TIMEOUT_S}" \
+                --region "${AWS_REGION}"
+          else
+            echo "Creating new Lambda function…"
+            aws lambda create-function \
+                --function-name "${LAMBDA_FUNCTION}" \
+                --package-type Image \
+                --code "ImageUri=${IMG_URI}" \
+                --role "${ROLE_ARN}" \
+                --memory-size "${LAMBDA_MEMORY_MB}" \
+                --timeout "${LAMBDA_TIMEOUT_S}" \
+                --architectures x86_64 \
+                --region "${AWS_REGION}"
+            aws lambda wait function-active \
+                --function-name "${LAMBDA_FUNCTION}" \
+                --region "${AWS_REGION}"
+          fi
+
+      - name: Ensure Function URL exists (public, no auth)
+        run: |
+          if ! aws lambda get-function-url-config \
+                  --function-name "${LAMBDA_FUNCTION}" \
+                  --region "${AWS_REGION}" >/dev/null 2>&1; then
+            aws lambda create-function-url-config \
+                --function-name "${LAMBDA_FUNCTION}" \
+                --auth-type NONE \
+                --cors '{"AllowOrigins":["*"],"AllowMethods":["*"],"AllowHeaders":["*"]}' \
+                --region "${AWS_REGION}"
+            # Public invoke permission
+            aws lambda add-permission \
+                --function-name "${LAMBDA_FUNCTION}" \
+                --statement-id public-url \
+                --action lambda:InvokeFunctionUrl \
+                --principal '*' \
+                --function-url-auth-type NONE \
+                --region "${AWS_REGION}" || true
+          fi
+
+      - name: Print Function URL
+        run: |
+          echo "============================================================"
+          aws lambda get-function-url-config \
+              --function-name "${LAMBDA_FUNCTION}" \
+              --region "${AWS_REGION}" \
+              --query FunctionUrl --output text
+          echo "============================================================"

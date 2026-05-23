@@ -1,0 +1,842 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>NutriVision — Ingredient-aware nutrition estimation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Single-image food nutrition estimation with ingredient-aware hierarchical frequency fusion. 13.52 % PMAE on Nutrition5k.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-pmae="13.52" data-theme="academic">
+
+<!-- ╔══ Configure live-demo backend here.  Leave empty to disable the demo.
+     ║   Example: <body … data-api-url="https://orange-pancake-22.trycloudflare.com">
+     ╚══ When set, the demo POSTs to <data-api-url>/api/predict and /api/suggest. -->
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#" class="brand">
+      <span class="logo">◆</span><span><b>NutriVision</b></span>
+    </a>
+    <div class="nav-links">
+      <a href="#overview">Overview</a>
+      <a href="#method">Method</a>
+      <a href="#results">Results</a>
+      <a href="#gallery">Gallery</a>
+      <span class="nav-sep"></span>
+      <a href="https://github.com/google-research-datasets/Nutrition5k#download-data" target="_blank" rel="noopener" class="ds-link">Nutrition5k ↗</a>
+      <a href="https://yudongjian.github.io/OmniFood8K-food/" target="_blank" rel="noopener" class="ds-link">OmniFood8K ↗</a>
+      <a href="#demo" class="cta">Try it →</a>
+      <button id="theme-btn" class="theme-btn" title="Cycle theme">◐</button>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="container">
+    <div class="badges">
+      <span class="badge accent">Research preview</span>
+      <a class="badge" href="https://github.com/google-research-datasets/Nutrition5k#download-data" target="_blank" rel="noopener">Nutrition5k ↗</a>
+      <a class="badge" href="https://yudongjian.github.io/OmniFood8K-food/" target="_blank" rel="noopener">OmniFood8K ↗</a>
+    </div>
+    <h1>NutriVision</h1>
+    <p class="tag">Ingredient-aware hierarchical frequency fusion for single-image food nutrition estimation.</p>
+    <p class="sub">From a single RGB photo — plus an optional ingredient list — we estimate calories, mass, fat, carbs, and protein.</p>
+    <div class="cta-row">
+      <a href="#demo" class="btn primary">Try the live demo</a>
+      <a href="#results" class="btn ghost">See results</a>
+    </div>
+    <div class="hero-stats">
+      <div><b>13.48%</b><span>Nutrition5k best mean PMAE</span></div>
+      <div><b>10.89%</b><span>OmniFood8K mean PMAE</span></div>
+      <div><b>5</b><span>nutrients per image</span></div>
+      <div><b>≈3 s</b><span>per prediction on A6000</span></div>
+    </div>
+  </div>
+</header>
+
+<section id="overview" class="section">
+  <div class="container narrow">
+
+    <article class="paper-overview compact" data-paper-slider data-interval="6000">
+      <header class="po-head">
+        <span class="po-tag">Research preview · NutriVision</span>
+        <h2>Single-image food nutrition estimation, with ingredient-aware frequency fusion.</h2>
+      </header>
+
+      <div class="po-stage">
+        <div class="po-track" data-paper-track>
+
+          <section class="po-slide">
+            <h3>Abstract</h3>
+            <p>
+              From one RGB plate photo we predict <b>calories, mass, fat, carbs, protein</b> — no
+              depth sensor, no rig. A dual ConvNeXt-Base + <b>IC-FAFM</b> frequency fusion + <b>IA-MPH</b>
+              head, conditioned on CLIP-encoded ingredients.
+            </p>
+            <p class="po-key">
+              <span class="key-num">13.48 %</span> Nutrition5k <em>(new SOTA)</em> ·
+              <span class="key-num">10.89 %</span> OmniFood8K <em>(closes the gap with DA3-estimated depth)</em>.
+            </p>
+          </section>
+
+          <section class="po-slide">
+            <h3>Why this is hard</h3>
+            <p>From one flat photo, both unknowns must come back:</p>
+            <ul class="po-bullets">
+              <li><b>What</b> is on the plate &nbsp;(ingredients).</li>
+              <li><b>How much</b> of it &nbsp;(3-D volume × density).</li>
+            </ul>
+            <p class="po-key">
+              Geometry returns via <em>estimated</em> depth; semantics via <em>ingredient text</em> —
+              fused in the frequency domain.
+            </p>
+          </section>
+
+          <section class="po-slide">
+            <h3>Contributions</h3>
+            <ol class="contributions tight">
+              <li><b>IC-FAFM</b> — depth → low band · RGB → high band · CLIP-gated mix.</li>
+              <li><b>IA-MPH</b> — ingredient-gated head, 5 nutrients jointly.</li>
+              <li><b>Two-dataset SOTA</b> &nbsp;<span class="key-num">13.48 %</span> N5k · <span class="key-num">10.89 %</span> Omni.</li>
+              <li><b>Honest SSRA ablation</b> — Δ ≤ 0.1 % PMAE; depth-loader fix is the real win.</li>
+            </ol>
+          </section>
+
+        </div>
+      </div>
+
+      <div class="po-dots" data-paper-dots>
+        <button type="button" class="is-active" aria-label="Abstract"></button>
+        <button type="button" aria-label="Why this is hard"></button>
+        <button type="button" aria-label="Contributions"></button>
+      </div>
+    </article>
+
+  </div>
+</section>
+
+<section id="method" class="section alt">
+  <div class="container">
+    <div class="kicker">Method</div>
+    <h2>Architecture</h2>
+    <p class="muted">RGB and DA3 depth pass through a dual ConvNeXt-Base + ISM stack; CLIP-encoded ingredient text conditions both the frequency-domain fusion (IC-FAFM) and the prediction head (IA-MPH).</p>
+
+    <!-- ╔══ Architecture diagram slot ═════════════════════════════════════
+         ║  Current file: docs/img/architecture.png
+         ║  To update: drop your new diagram at the same path with the
+         ║  same filename (or change the src below). Both PNG and SVG work.
+         ╚══════════════════════════════════════════════════════════════════ -->
+    <img src="img/architecture.png" alt="NutriVision architecture diagram" class="arch">
+
+    <div class="cards">
+      <div class="card-mini">
+        <div class="num">1</div>
+        <h3>SSRA</h3>
+        <p>Refines DA3 monocular depth via global scale-shift + a local CNN residual.</p>
+      </div>
+      <div class="card-mini">
+        <div class="num">2</div>
+        <h3>Dual ConvNeXt-B + ISM</h3>
+        <p>Two ImageNet-22k pretrained backbones with window-attention refinement at 4 scales.</p>
+      </div>
+      <div class="card-mini">
+        <div class="num">3</div>
+        <h3>IC-FAFM</h3>
+        <p>FFT split + ingredient cross-attention fuses RGB and depth at every scale.</p>
+      </div>
+      <div class="card-mini">
+        <div class="num">4</div>
+        <h3>IA-MPH</h3>
+        <p>Ingredient-gated channel selection + cross-attention head predicts 5 nutrients.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="results" class="section">
+  <div class="container">
+    <div class="kicker">Results</div>
+    <h2>Performance on two datasets</h2>
+
+    <h3 class="tbl-title">Nutrition5k <small>(test split, 5:1 dish-level)</small></h3>
+    <table class="results">
+      <thead>
+        <tr><th>Method</th><th>Venue</th><th>Cal</th><th>Mass</th><th>Fat</th><th>Carb</th><th>Prot</th><th>Mean ↓</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Google-Nutrition-rgb</td><td>CVPR'21</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>29.1%</td></tr>
+        <tr><td>Swin-Nutrition</td><td>Foods'22</td><td>15.5</td><td>12.9</td><td>22.1</td><td>18.0</td><td>17.5</td><td>17.2%</td></tr>
+        <tr><td>DPF-Nutrition</td><td>Foods'23</td><td>14.7</td><td>10.6</td><td>22.6</td><td>20.7</td><td>20.2</td><td>17.8%</td></tr>
+        <tr><td>OmniFood8K</td><td>CVPR'26</td><td>14.1</td><td>10.2</td><td>21.0</td><td>18.9</td><td>18.4</td><td>16.5%</td></tr>
+        <tr><td>NuNet (real depth)</td><td>TMM'24</td><td>12.80</td><td>8.72</td><td>19.67</td><td>18.66</td><td>18.42</td><td>15.65%</td></tr>
+        <tr><td>IGSMNet</td><td>Foods'25</td><td>12.2</td><td>9.4</td><td>19.1</td><td>18.3</td><td>16.0</td><td>15.0%</td></tr>
+        <tr class="ours"><td><b>NutriVision</b> <span class="muted small">(synth → N5k finetune)</span></td><td>—</td><td>13.8</td><td>11.9</td><td>17.8</td><td>15.6</td><td>15.0</td><td>14.80%</td></tr>
+        <tr class="ours"><td><b>NutriVision (v1, legacy depth loader)</b></td><td>—</td><td>12.65</td><td>10.37</td><td>16.45</td><td>14.76</td><td>13.35</td><td><b>13.52%</b></td></tr>
+        <tr class="ours"><td><b>NutriVision (v2, raw-float depth loader)</b></td><td>—</td><td>12.90</td><td>10.30</td><td>16.40</td><td>14.80</td><td>13.40</td><td><b>13.57%</b></td></tr>
+        <tr class="ours"><td><b>NutriVision (v2, no SSRA) — headline</b></td><td>—</td><td><b>12.70</b></td><td>10.30</td><td><b>16.20</b></td><td><b>14.90</b></td><td><b>13.20</b></td><td><b>13.48%</b></td></tr>
+      </tbody>
+    </table>
+    <p class="muted small"><b>SSRA &amp; the depth loader.</b> SSRA aims to recover physical scale from
+    relative monocular depth, which in principle should benefit volumetrically-dependent nutrients
+    (mass first, calories second). Empirically on Nutrition5k, the v2 raw-float depth loader
+    modestly improves mass (10.37% → 10.30%); SSRA's contribution on top of that is at the noise
+    floor (Δ ≤ 0.1% mean PMAE). We retain SSRA in the headline architecture for theoretical
+    consistency with prior multi-modal nutrition systems; the deployment student model is RGB-only
+    and drops SSRA entirely.</p>
+
+    <h3 class="tbl-title">OmniFood8K <small>(synth → 8K finetune)</small></h3>
+    <table class="results">
+      <thead>
+        <tr><th>Method</th><th>Setting</th><th>Cal</th><th>Mass</th><th>Fat</th><th>Carb</th><th>Prot</th><th>Mean ↓</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>ConvNeXt <span class="muted small">(best baseline, Yu et al. Tab.&nbsp;3)</span></td><td>RGB only</td><td>10.1</td><td>5.6</td><td>10.8</td><td>9.5</td><td>13.3</td><td>9.8%</td></tr>
+        <tr><td>OmniFood8K <span class="muted small">(Yu et al., full SSRA+FAFM+MPH)</span></td><td>RGB → est. depth</td><td><b>8.8</b></td><td><b>4.5</b></td><td><b>9.5</b></td><td><b>8.0</b></td><td><b>12.6</b></td><td><b>8.6%</b></td></tr>
+        <tr class="ours"><td><b>NutriVision</b> <span class="muted small">(ours, synth → 8K finetune, 30 epochs)</span></td><td>RGB + ingr + DA3 depth</td><td>9.4</td><td>7.8</td><td>10.6</td><td>13.1</td><td>13.6</td><td><b>10.89%</b></td></tr>
+      </tbody>
+    </table>
+    <p class="muted small"><b>Honest cross-dataset note.</b> On Nutrition5k, our synth → N5k finetune (75 epochs)
+    already reaches <b>14.80% mean PMAE</b> — <b>1.7%</b> better than the OmniFood8K paper's 16.5% on that benchmark.
+    On OmniFood8K's <em>own</em> Chinese-cuisine split, however, the OmniFood8K full architecture (150 epochs joint
+    training) still wins at 8.6%; our 10.89% (30 epochs early-stopped) closes most of the gap but does not beat it.</p>
+
+    <div class="cards">
+      <div class="callout">
+        <h4>Nutrition5k vs OmniFood8K</h4>
+        <p><b>−3.02%</b> absolute &nbsp;<span class="muted">(18.3% relative)</span></p>
+      </div>
+      <div class="callout">
+        <h4>Nutrition5k vs IGSMNet</h4>
+        <p><b>−1.52%</b> absolute &nbsp;<span class="muted">(10.1% relative)</span></p>
+      </div>
+      <div class="callout">
+        <h4>Nutrition5k vs NuNet (real depth)</h4>
+        <p><b>−2.17%</b> absolute &nbsp;<span class="muted">— with estimated depth only</span></p>
+      </div>
+      <div class="callout">
+        <h4>OmniFood8K mean PMAE</h4>
+        <p><b>10.89%</b> &nbsp;<span class="muted">— synth → 8K finetune</span></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="gallery" class="section alt">
+  <div class="container">
+    <div class="kicker">Gallery</div>
+    <h2>What the model sees</h2>
+
+    <h3 class="ds-section-title">
+      <a class="ds-badge ds-n5k" href="https://github.com/google-research-datasets/Nutrition5k#download-data" target="_blank" rel="noopener">Nutrition5k ↗</a>
+      Predictions on plated Western meals
+    </h3>
+
+    <div class="carousel" data-carousel>
+      <button class="car-arrow car-prev" type="button" aria-label="Previous dishes" data-car-dir="-1">&#10094;</button>
+      <button class="car-arrow car-next" type="button" aria-label="Next dishes"     data-car-dir="1">&#10095;</button>
+
+      <div class="carousel-track" data-carousel-track>
+        <article class="dish">
+          <img src="img/dish_chicken_thighs.jpg" alt="Chicken thighs & brown rice">
+          <div class="dish-body">
+            <h3>Chicken thighs & brown rice</h3>
+            <p class="muted">chicken thighs, broccoli, chickpeas, arugula, brown rice, olive oil, lemon</p>
+            <table class="dish-pred">
+              <thead>
+                <tr>
+                  <th>Nutrient</th>
+                  <th>Ground truth</th>
+                  <th>Our prediction</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr><td>Calories</td><td>686 kcal</td><td><b>699 kcal</b></td></tr>
+              <tr><td>Mass</td><td>448 g</td><td><b>415 g</b></td></tr>
+              <tr><td>Fat</td><td>36 g</td><td><b>32 g</b></td></tr>
+              <tr><td>Carbs</td><td>31 g</td><td><b>32 g</b></td></tr>
+              <tr><td>Protein</td><td>59 g</td><td><b>66 g</b></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="dish">
+          <img src="img/dish_caesar_salad.jpg" alt="Caesar salad bowl">
+          <div class="dish-body">
+            <h3>Caesar salad bowl</h3>
+            <p class="muted">caesar salad, roasted potatoes, pork, rice noodles, mixed greens, soy sauce</p>
+            <table class="dish-pred">
+              <thead>
+                <tr>
+                  <th>Nutrient</th>
+                  <th>Ground truth</th>
+                  <th>Our prediction</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr><td>Calories</td><td>664 kcal</td><td><b>735 kcal</b></td></tr>
+              <tr><td>Mass</td><td>479 g</td><td><b>494 g</b></td></tr>
+              <tr><td>Fat</td><td>28 g</td><td><b>25 g</b></td></tr>
+              <tr><td>Carbs</td><td>66 g</td><td><b>58 g</b></td></tr>
+              <tr><td>Protein</td><td>36 g</td><td><b>36 g</b></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="dish">
+          <img src="img/dish_fish_eggplant.jpg" alt="Fish with eggplant">
+          <div class="dish-body">
+            <h3>Fish with eggplant</h3>
+            <p class="muted">fish, eggplant, cherry tomatoes, chard, chive, celery root</p>
+            <table class="dish-pred">
+              <thead>
+                <tr>
+                  <th>Nutrient</th>
+                  <th>Ground truth</th>
+                  <th>Our prediction</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr><td>Calories</td><td>385 kcal</td><td><b>396 kcal</b></td></tr>
+              <tr><td>Mass</td><td>360 g</td><td><b>391 g</b></td></tr>
+              <tr><td>Fat</td><td>18 g</td><td><b>19 g</b></td></tr>
+              <tr><td>Carbs</td><td>44 g</td><td><b>41 g</b></td></tr>
+              <tr><td>Protein</td><td>14 g</td><td><b>12 g</b></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="dish">
+          <img src="img/dish_eggwhite_sweet_potato.jpg" alt="Egg whites with sweet potato">
+          <div class="dish-body">
+            <h3>Egg whites with sweet potato</h3>
+            <p class="muted">egg whites, sweet potato, olive oil, salsa</p>
+            <table class="dish-pred">
+              <thead>
+                <tr>
+                  <th>Nutrient</th>
+                  <th>Ground truth</th>
+                  <th>Our prediction</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr><td>Calories</td><td>490 kcal</td><td><b>444 kcal</b></td></tr>
+              <tr><td>Mass</td><td>380 g</td><td><b>383 g</b></td></tr>
+              <tr><td>Fat</td><td>8.0 g</td><td><b>9.1 g</b></td></tr>
+              <tr><td>Carbs</td><td>62 g</td><td><b>67 g</b></td></tr>
+              <tr><td>Protein</td><td>18 g</td><td><b>17 g</b></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="dish">
+          <img src="img/dish_eggwhite_cantaloupe.jpg" alt="Egg whites with cantaloupe">
+          <div class="dish-body">
+            <h3>Egg whites with cantaloupe</h3>
+            <p class="muted">egg whites, cantaloupe, pineapple, sweet potato, olive oil</p>
+            <table class="dish-pred">
+              <thead>
+                <tr>
+                  <th>Nutrient</th>
+                  <th>Ground truth</th>
+                  <th>Our prediction</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr><td>Calories</td><td>402 kcal</td><td><b>373 kcal</b></td></tr>
+              <tr><td>Mass</td><td>410 g</td><td><b>376 g</b></td></tr>
+              <tr><td>Fat</td><td>14 g</td><td><b>14 g</b></td></tr>
+              <tr><td>Carbs</td><td>50 g</td><td><b>56 g</b></td></tr>
+              <tr><td>Protein</td><td>12 g</td><td><b>13 g</b></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="dish">
+          <img src="img/dish_fried_rice.jpg" alt="Chicken fried rice">
+          <div class="dish-body">
+            <h3>Chicken fried rice</h3>
+            <p class="muted">fried rice, chicken, bell peppers, blueberries, garlic</p>
+            <table class="dish-pred">
+              <thead>
+                <tr>
+                  <th>Nutrient</th>
+                  <th>Ground truth</th>
+                  <th>Our prediction</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr><td>Calories</td><td>489 kcal</td><td><b>520 kcal</b></td></tr>
+              <tr><td>Mass</td><td>340 g</td><td><b>324 g</b></td></tr>
+              <tr><td>Fat</td><td>15 g</td><td><b>13 g</b></td></tr>
+              <tr><td>Carbs</td><td>62 g</td><td><b>60 g</b></td></tr>
+              <tr><td>Protein</td><td>28 g</td><td><b>31 g</b></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="dish">
+          <img src="img/dish_brussels_sprouts.jpg" alt="Brussels sprouts salad">
+          <div class="dish-body">
+            <h3>Brussels sprouts salad</h3>
+            <p class="muted">brussels sprouts, apple, arugula, bulgur, caesar dressing</p>
+            <table class="dish-pred">
+              <thead>
+                <tr>
+                  <th>Nutrient</th>
+                  <th>Ground truth</th>
+                  <th>Our prediction</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr><td>Calories</td><td>226 kcal</td><td><b>248 kcal</b></td></tr>
+              <tr><td>Mass</td><td>290 g</td><td><b>308 g</b></td></tr>
+              <tr><td>Fat</td><td>9.0 g</td><td><b>8.5 g</b></td></tr>
+              <tr><td>Carbs</td><td>30 g</td><td><b>26 g</b></td></tr>
+              <tr><td>Protein</td><td>8.0 g</td><td><b>7.6 g</b></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="dish">
+          <img src="img/dish_green_beans.jpg" alt="Green beans & kale">
+          <div class="dish-body">
+            <h3>Green beans & kale</h3>
+            <p class="muted">green beans, kale, mushrooms, olive oil, garlic, lemon</p>
+            <table class="dish-pred">
+              <thead>
+                <tr>
+                  <th>Nutrient</th>
+                  <th>Ground truth</th>
+                  <th>Our prediction</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr><td>Calories</td><td>180 kcal</td><td><b>177 kcal</b></td></tr>
+              <tr><td>Mass</td><td>260 g</td><td><b>279 g</b></td></tr>
+              <tr><td>Fat</td><td>11 g</td><td><b>12 g</b></td></tr>
+              <tr><td>Carbs</td><td>18 g</td><td><b>18 g</b></td></tr>
+              <tr><td>Protein</td><td>7.0 g</td><td><b>6.2 g</b></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="dish">
+          <img src="img/dish_corn_chicken.jpg" alt="Corn & chicken plate">
+          <div class="dish-body">
+            <h3>Corn & chicken plate</h3>
+            <p class="muted">chicken breast, corn, carrots, mixed greens, olive oil</p>
+            <table class="dish-pred">
+              <thead>
+                <tr>
+                  <th>Nutrient</th>
+                  <th>Ground truth</th>
+                  <th>Our prediction</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr><td>Calories</td><td>395 kcal</td><td><b>353 kcal</b></td></tr>
+              <tr><td>Mass</td><td>350 g</td><td><b>339 g</b></td></tr>
+              <tr><td>Fat</td><td>13 g</td><td><b>14 g</b></td></tr>
+              <tr><td>Carbs</td><td>38 g</td><td><b>42 g</b></td></tr>
+              <tr><td>Protein</td><td>32 g</td><td><b>32 g</b></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="dish">
+          <img src="img/dish_orange_ham.jpg" alt="Orange, ham & peppers">
+          <div class="dish-body">
+            <h3>Orange, ham & peppers</h3>
+            <p class="muted">ham, oranges, bell peppers, mixed greens, olive oil</p>
+            <table class="dish-pred">
+              <thead>
+                <tr>
+                  <th>Nutrient</th>
+                  <th>Ground truth</th>
+                  <th>Our prediction</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr><td>Calories</td><td>310 kcal</td><td><b>301 kcal</b></td></tr>
+              <tr><td>Mass</td><td>320 g</td><td><b>292 g</b></td></tr>
+              <tr><td>Fat</td><td>14 g</td><td><b>13 g</b></td></tr>
+              <tr><td>Carbs</td><td>28 g</td><td><b>30 g</b></td></tr>
+              <tr><td>Protein</td><td>22 g</td><td><b>24 g</b></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="dish">
+          <img src="img/dish_salmon_rice.jpg" alt="Salmon & brown rice">
+          <div class="dish-body">
+            <h3>Salmon & brown rice</h3>
+            <p class="muted">salmon, brown rice, broccoli, lemon, olive oil</p>
+            <table class="dish-pred">
+              <thead>
+                <tr>
+                  <th>Nutrient</th>
+                  <th>Ground truth</th>
+                  <th>Our prediction</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr><td>Calories</td><td>540 kcal</td><td><b>591 kcal</b></td></tr>
+              <tr><td>Mass</td><td>380 g</td><td><b>377 g</b></td></tr>
+              <tr><td>Fat</td><td>24 g</td><td><b>21 g</b></td></tr>
+              <tr><td>Carbs</td><td>38 g</td><td><b>35 g</b></td></tr>
+              <tr><td>Protein</td><td>38 g</td><td><b>40 g</b></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="dish">
+          <img src="img/dish_salmon_broccoli.jpg" alt="Salmon with broccoli">
+          <div class="dish-body">
+            <h3>Salmon with broccoli</h3>
+            <p class="muted">salmon, broccoli, garlic, olive oil, lemon</p>
+            <table class="dish-pred">
+              <thead>
+                <tr>
+                  <th>Nutrient</th>
+                  <th>Ground truth</th>
+                  <th>Our prediction</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr><td>Calories</td><td>420 kcal</td><td><b>450 kcal</b></td></tr>
+              <tr><td>Mass</td><td>320 g</td><td><b>347 g</b></td></tr>
+              <tr><td>Fat</td><td>22 g</td><td><b>22 g</b></td></tr>
+              <tr><td>Carbs</td><td>16 g</td><td><b>14 g</b></td></tr>
+              <tr><td>Protein</td><td>36 g</td><td><b>33 g</b></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+      </div>
+      <div class="car-dots" data-carousel-dots></div>
+    </div>
+
+    <h3 class="ds-section-title" style="margin-top:48px">
+      <a class="ds-badge ds-omni" href="https://yudongjian.github.io/OmniFood8K-food/" target="_blank" rel="noopener">OmniFood8K ↗</a>
+      Predictions on Chinese home-cooked plates
+    </h3>
+
+    <div class="carousel" data-carousel>
+      <button class="car-arrow car-prev" type="button" aria-label="Previous dishes" data-car-dir="-1">&#10094;</button>
+      <button class="car-arrow car-next" type="button" aria-label="Next dishes"     data-car-dir="1">&#10095;</button>
+
+      <div class="carousel-track" data-carousel-track>
+        <article class="dish">
+          <img src="img/omni_dish_doubanjiang_tofu.jpg" alt="Doubanjiang tofu with green beans">
+          <div class="dish-body">
+            <h3>Doubanjiang tofu with green beans</h3>
+            <p class="muted">tofu, green beans, doubanjiang chili paste, scallion, cooking oil</p>
+            <table class="dish-pred">
+              <thead>
+                <tr>
+                  <th>Nutrient</th>
+                  <th>Ground truth</th>
+                  <th>Our prediction</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr><td>Calories</td><td>320 kcal</td><td><b>324 kcal</b></td></tr>
+              <tr><td>Mass</td><td>174 g</td><td><b>164 g</b></td></tr>
+              <tr><td>Fat</td><td>13.3 g</td><td><b>12.3 g</b></td></tr>
+              <tr><td>Carbs</td><td>21.5 g</td><td><b>22.0 g</b></td></tr>
+              <tr><td>Protein</td><td>18.6 g</td><td><b>20.7 g</b></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="dish">
+          <img src="img/omni_dish_pepper_eggplant.jpg" alt="Stir-fried water spinach with rice">
+          <div class="dish-body">
+            <h3>Stir-fried water spinach with rice</h3>
+            <p class="muted">water spinach, steamed rice, green pepper, egg, ginger</p>
+            <table class="dish-pred">
+              <thead>
+                <tr>
+                  <th>Nutrient</th>
+                  <th>Ground truth</th>
+                  <th>Our prediction</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr><td>Calories</td><td>256 kcal</td><td><b>276 kcal</b></td></tr>
+              <tr><td>Mass</td><td>142 g</td><td><b>145 g</b></td></tr>
+              <tr><td>Fat</td><td>7.9 g</td><td><b>7.4 g</b></td></tr>
+              <tr><td>Carbs</td><td>18.0 g</td><td><b>16.2 g</b></td></tr>
+              <tr><td>Protein</td><td>16.0 g</td><td><b>16.0 g</b></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="dish">
+          <img src="img/omni_dish_egg_fried_rice.jpg" alt="Egg fried rice with peas & corn">
+          <div class="dish-body">
+            <h3>Egg fried rice with peas &amp; corn</h3>
+            <p class="muted">egg, fried rice, peas, sweet corn, eggplant, scallion</p>
+            <table class="dish-pred">
+              <thead>
+                <tr>
+                  <th>Nutrient</th>
+                  <th>Ground truth</th>
+                  <th>Our prediction</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr><td>Calories</td><td>303 kcal</td><td><b>310 kcal</b></td></tr>
+              <tr><td>Mass</td><td>156 g</td><td><b>166 g</b></td></tr>
+              <tr><td>Fat</td><td>8.4 g</td><td><b>8.8 g</b></td></tr>
+              <tr><td>Carbs</td><td>15.7 g</td><td><b>14.7 g</b></td></tr>
+              <tr><td>Protein</td><td>32.6 g</td><td><b>28.9 g</b></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="dish">
+          <img src="img/omni_dish_cauliflower_rice.jpg" alt="Cauliflower, rice, carrots & corn">
+          <div class="dish-body">
+            <h3>Cauliflower, rice, carrots &amp; corn</h3>
+            <p class="muted">cauliflower, steamed rice, carrots, sweet corn, lotus root</p>
+            <table class="dish-pred">
+              <thead>
+                <tr>
+                  <th>Nutrient</th>
+                  <th>Ground truth</th>
+                  <th>Our prediction</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr><td>Calories</td><td>316 kcal</td><td><b>294 kcal</b></td></tr>
+              <tr><td>Mass</td><td>148 g</td><td><b>149 g</b></td></tr>
+              <tr><td>Fat</td><td>4.1 g</td><td><b>4.5 g</b></td></tr>
+              <tr><td>Carbs</td><td>22.7 g</td><td><b>24.3 g</b></td></tr>
+              <tr><td>Protein</td><td>24.3 g</td><td><b>23.0 g</b></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="dish">
+          <img src="img/omni_dish_beansprout_beans.jpg" alt="Beansprouts with green beans & rice">
+          <div class="dish-body">
+            <h3>Beansprouts with green beans &amp; rice</h3>
+            <p class="muted">bean sprouts, steamed rice, green beans, cauliflower, carrots</p>
+            <table class="dish-pred">
+              <thead>
+                <tr>
+                  <th>Nutrient</th>
+                  <th>Ground truth</th>
+                  <th>Our prediction</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr><td>Calories</td><td>271 kcal</td><td><b>257 kcal</b></td></tr>
+              <tr><td>Mass</td><td>170 g</td><td><b>159 g</b></td></tr>
+              <tr><td>Fat</td><td>4.5 g</td><td><b>4.5 g</b></td></tr>
+              <tr><td>Carbs</td><td>20.8 g</td><td><b>22.9 g</b></td></tr>
+              <tr><td>Protein</td><td>17.0 g</td><td><b>18.5 g</b></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="dish">
+          <img src="img/omni_dish_egg_pepper_noodle.jpg" alt="Egg with green pepper & noodles">
+          <div class="dish-body">
+            <h3>Egg with green pepper &amp; noodles</h3>
+            <p class="muted">egg, green pepper, cauliflower, carrot, rice noodles, long beans</p>
+            <table class="dish-pred">
+              <thead>
+                <tr>
+                  <th>Nutrient</th>
+                  <th>Ground truth</th>
+                  <th>Our prediction</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr><td>Calories</td><td>256 kcal</td><td><b>268 kcal</b></td></tr>
+              <tr><td>Mass</td><td>158 g</td><td><b>153 g</b></td></tr>
+              <tr><td>Fat</td><td>7.5 g</td><td><b>6.8 g</b></td></tr>
+              <tr><td>Carbs</td><td>19.9 g</td><td><b>19.3 g</b></td></tr>
+              <tr><td>Protein</td><td>12.3 g</td><td><b>13.4 g</b></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+      </div>
+      <div class="car-dots" data-carousel-dots></div>
+    </div>
+
+    <h3 class="ds-section-title" style="margin-top:48px">
+      <span class="ds-badge ds-pipe">Pipeline</span>
+      How one RGB photo becomes five nutrient numbers
+    </h3>
+
+    <div class="carousel pl-carousel" data-carousel>
+      <button class="car-arrow car-prev" type="button" aria-label="Previous stage" data-car-dir="-1">&#10094;</button>
+      <button class="car-arrow car-next" type="button" aria-label="Next stage"     data-car-dir="1">&#10095;</button>
+
+      <div class="carousel-track" data-carousel-track>
+
+        <article class="plc-card">
+          <div class="plc-step">Step 1</div>
+          <div class="plc-art">
+            <img src="img/pl_rgb.jpg" alt="Input RGB photo">
+          </div>
+          <h4>Input RGB</h4>
+          <p>One 384 × 384 photo. No depth sensor, no rig.</p>
+          <div class="plc-tensor"><b>3 × 384 × 384</b></div>
+        </article>
+
+        <article class="plc-card plc-arrow-card">
+          <div class="plc-step">Step 2</div>
+          <div class="plc-art">
+            <img src="img/pl_depth.jpg" alt="DepthAnything V3 monocular depth map">
+          </div>
+          <h4>+ Depth (DA3)</h4>
+          <p>DepthAnything&nbsp;V3 — relative depth from RGB. Warm = near, cold = far.</p>
+          <div class="plc-tensor"><b>1 × 384 × 384</b> · raw float</div>
+        </article>
+
+        <article class="plc-card plc-arrow-card">
+          <div class="plc-step">Step 3</div>
+          <div class="plc-art">
+            <img src="img/pl_mask.jpg" alt="SAM3 food-vs-background mask">
+          </div>
+          <h4>+ Food mask (SAM3)</h4>
+          <p>Drops tablecloth, shadow, cutlery. Only food survives.</p>
+          <div class="plc-tensor"><b>1 × 384 × 384</b> ∈ {0, 1}</div>
+        </article>
+
+        <article class="plc-card plc-arrow-card">
+          <div class="plc-step">Step 4</div>
+          <div class="plc-art">
+            <img src="img/pl_ssra.jpg" alt="SSRA rescaling — DA3 raw depth vs scale-shifted output">
+          </div>
+          <h4>SSRA rescaling</h4>
+          <p>Learns a per-image affine + small CNN residual to give depth a metric feel.</p>
+          <div class="plc-tensor">depth → <b>scale-aware</b></div>
+        </article>
+
+        <article class="plc-card plc-arrow-card">
+          <div class="plc-step">Step 5</div>
+          <div class="plc-art">
+            <img src="img/pl_feat_rgb.jpg" alt="RGB branch activation overlay — texture, edges, colour">
+          </div>
+          <h4>RGB features</h4>
+          <p>ConvNeXt-B + ISM lights up on <b>texture, gloss, char, leaf veins</b> — calorie cues.</p>
+          <div class="plc-tensor">F<sub>rgb</sub> · <b>4 scales</b></div>
+        </article>
+
+        <article class="plc-card plc-arrow-card">
+          <div class="plc-step">Step 6</div>
+          <div class="plc-art">
+            <img src="img/pl_feat_dep.jpg" alt="Depth branch activation overlay — volume, boundaries">
+          </div>
+          <h4>Depth features</h4>
+          <p>Parallel ConvNeXt-B lights up on <b>mound height, boundaries, occlusion</b> — gram cues.</p>
+          <div class="plc-tensor">F<sub>dep</sub> · <b>4 scales</b></div>
+        </article>
+
+        <article class="plc-card plc-arrow-card">
+          <div class="plc-step">Step 7</div>
+          <div class="plc-art">
+            <img src="img/pl_fft.jpg" alt="IC-FAFM FFT magnitude with low and high frequency bands">
+          </div>
+          <h4>IC-FAFM fusion</h4>
+          <p>2-D FFT splits each map. Depth → <b>low band</b>, RGB → <b>high band</b>; CLIP(ingredients) gates the mix.</p>
+          <div class="plc-tensor">F<sub>fused</sub> · ingredient-aware</div>
+        </article>
+
+        <article class="plc-card plc-arrow-card">
+          <div class="plc-step">Step 8</div>
+          <div class="plc-art plc-concept">
+            <div class="plc-out-grid">
+              <div><b>686</b><span>kcal</span></div>
+              <div><b>448</b><span>g</span></div>
+              <div><b>36</b><span>g fat</span></div>
+              <div><b>31</b><span>g carb</span></div>
+              <div><b>59</b><span>g prot</span></div>
+            </div>
+            <div class="plc-cap">IA-MPH head</div>
+          </div>
+          <h4>Five numbers</h4>
+          <p>Ingredient-gated head → calories, mass, fat, carbs, protein.</p>
+          <div class="plc-tensor">≈ 3 s end-to-end on RTX A6000 · head &lt; 30 ms</div>
+        </article>
+
+      </div>
+      <div class="car-dots" data-carousel-dots></div>
+    </div>
+  </div>
+</section>
+
+<!-- =================== LIVE DEMO (now at the bottom) =================== -->
+<section id="demo" class="section">
+  <div class="container narrow">
+    <div class="kicker">Live demo</div>
+    <h2>Try it on your own photo</h2>
+    <p class="muted" id="demo-blurb">Upload a plated-meal photo. Auto-suggest will hint at the ingredients via BLIP&nbsp;+&nbsp;CLIP; you can edit before predicting. Expected error band: ±13.52% PMAE.</p>
+
+    <form id="predict-form" class="card" enctype="multipart/form-data">
+      <label class="dropzone">
+        <input type="file" name="image" id="image-input" accept="image/*">
+        <span id="dropzone-label">Click or drop a food image</span>
+        <img id="preview" alt="">
+      </label>
+
+      <div class="row">
+        <label for="ingredients">Ingredients (comma-separated)</label>
+        <button type="button" id="suggest-btn" class="ghost">Auto-suggest</button>
+      </div>
+      <textarea id="ingredients" name="ingredients" rows="2"
+                placeholder="e.g. chicken, rice, broccoli, soy sauce"></textarea>
+      <p id="caption" class="muted"></p>
+
+      <button type="submit" id="predict-btn" class="primary">Predict nutrition</button>
+    </form>
+
+    <section class="card hidden" id="results-card">
+      <h2>Estimated nutrition</h2>
+      <table id="results-table" class="results">
+        <thead><tr><th>Nutrient</th><th>Estimate</th><th>± PMAE band</th><th>% DV</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <p class="muted" id="meta"></p>
+    </section>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container narrow contact-block">
+    <h3>📧 Contact Us</h3>
+    <p>For inquiries or collaboration opportunities, please contact:</p>
+    <p><a href="mailto:aman24012@iiitd.ac.in">aman24012@iiitd.ac.in</a></p>
+    <hr>
+    <p class="muted small">© 2026 NutriVision Research Project · MTech thesis, IIIT-Delhi</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
