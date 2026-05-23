@@ -2,10 +2,10 @@
 // The live demo POSTs to API_URL.  If empty/null, the demo gracefully degrades.
 
 // ★★★  PERMANENT API URL  ★★★
-// Cloudflare Worker proxy in front of the institute-server Flask backend.
-// This Worker URL never changes; if the upstream tunnel rotates, only
-// the UPSTREAM line in nutrivision-worker/src/worker.js needs an edit.
-const API_URL = "https://nutrivision.aman24012.workers.dev";
+// Modal serverless backend — fully independent of the institute server,
+// scales to zero, free-tier hosted. Serves /api/predict and /api/suggest.
+// First request after idle is a ~90s cold start; warm requests are quick.
+const API_URL = "https://kianraj--nutrivision-nutrivision-web.modal.run";
 
 // ────────────────── theme cycle (academic → forest → dark) ──────────────────
 const THEMES = ["academic", "forest", "dark"];
