@@ -176,12 +176,6 @@
         <tr class="ours"><td><b>NutriVision</b> <span class="muted small">(ours)</span></td><td>—</td><td><b>12.65</b></td><td><b>10.37</b></td><td><b>16.45</b></td><td><b>14.76</b></td><td><b>13.35</b></td><td><b>13.52%</b></td></tr>
       </tbody>
     </table>
-    <p class="muted small"><b>Why SSRA is retained.</b> SSRA aims to recover physical scale from
-    relative monocular depth, which in principle should benefit volumetrically-dependent nutrients
-    (mass first, calories second). We retain SSRA in the architecture for theoretical consistency
-    with prior multi-modal nutrition systems; the deployment student model is RGB-only and
-    drops SSRA entirely.</p>
-
     <h3 class="tbl-title">OmniFood8K <small>(synth → 8K finetune)</small></h3>
     <table class="results">
       <thead>
@@ -193,11 +187,6 @@
         <tr class="ours"><td><b>NutriVision</b> <span class="muted small">(ours, synth → 8K finetune, 30 epochs)</span></td><td>RGB + ingr + DA3 depth</td><td>9.4</td><td>7.8</td><td>10.6</td><td>13.1</td><td>13.6</td><td><b>10.89%</b></td></tr>
       </tbody>
     </table>
-    <p class="muted small"><b>Honest cross-dataset note.</b> On Nutrition5k, NutriVision reaches
-    <b>13.52% mean PMAE</b> — <b>3.0%</b> better than the OmniFood8K paper's 16.5% on that benchmark.
-    On OmniFood8K's <em>own</em> Chinese-cuisine split, however, the OmniFood8K full architecture (150 epochs joint
-    training) still wins at 8.6%; our 10.89% (30 epochs early-stopped) closes most of the gap but does not beat it.</p>
-
     <div class="cards">
       <div class="callout">
         <h4>Nutrition5k vs OmniFood8K</h4>
