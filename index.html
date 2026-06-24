@@ -170,10 +170,11 @@
         <tr><td>OmniFood8K</td><td>CVPR'26</td><td>14.1</td><td>10.2</td><td>21.0</td><td>18.9</td><td>18.4</td><td>16.5%</td></tr>
         <tr><td>NuNet (real depth)</td><td>TMM'25</td><td>12.80</td><td>8.72</td><td>19.67</td><td>18.66</td><td>18.42</td><td>15.65%</td></tr>
         <tr><td>IGSMNet</td><td>Foods'25</td><td>12.2</td><td>9.4</td><td>19.1</td><td>18.3</td><td>16.0</td><td>15.0%</td></tr>
-        <tr><td>IGSMNet <span class="muted small">(our re-run)</span></td><td>—</td><td>13.6</td><td>11.4</td><td>17.6</td><td>15.5</td><td>14.4</td><td>14.49%</td></tr>
+        <tr><td>IGSMNet <span class="muted small">(our reimpl.<sup>&dagger;</sup>)</span></td><td>—</td><td>13.6</td><td>11.4</td><td>17.6</td><td>15.5</td><td>14.4</td><td>14.49%</td></tr>
         <tr class="ours"><td><b>NutriVision</b> <span class="muted small">(ours)</span></td><td>—</td><td><b>12.65</b></td><td><b>10.37</b></td><td><b>16.45</b></td><td><b>14.76</b></td><td><b>13.35</b></td><td><b>13.52%</b></td></tr>
       </tbody>
     </table>
+    <p class="muted small"><sup>&dagger;</sup>IGSMNet's full training code was not publicly available; the &ldquo;our reimpl.&rdquo; row is our re-implementation of the IGSMNet architecture from its published description, trained under identical conditions to NutriVision. The 0.51 pp gap to IGSMNet's published 15.0% may reflect implementation details (CLIP encoding, alignment schedule, batching) we did not exactly recover.</p>
     <h3 class="tbl-title">OmniFood8K <small>(synth → 8K finetune)</small></h3>
     <table class="results">
       <thead>
